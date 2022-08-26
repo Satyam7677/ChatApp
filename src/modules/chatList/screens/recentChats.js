@@ -1,9 +1,9 @@
-import {StyleSheet, TouchableOpacity, FlatList} from 'react-native';
-import React, {useEffect, useLayoutEffect, useState} from 'react';
+import {StyleSheet, TouchableOpacity, FlatList, AppState} from 'react-native';
+import React, {useEffect, useLayoutEffect, useState, useRef} from 'react';
 import ButtonComponent from '../../../components/buttonComponent';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
-import {recentUserReducer} from '../../../reducer/rootReducer';
+import {recentUserReducer, blockReducer} from '../../../reducer/rootReducer';
 import {useDispatch, useSelector} from 'react-redux';
 import colors from '../../../utils/locale/colors';
 import ImageComponent from '../../../components/imageComponent';
@@ -18,20 +18,60 @@ import ViewComponent from '../../../components/viewComponent';
 export default function RecentChats({navigation}) {
   const [activityIndicator, setActivityIndicator] = useState(false);
   const [userModalVisible, setUserModalVisble] = useState(false);
+  const appState = useRef(AppState.currentState);
+  const [appStateVisible, setAppStateVisible] = useState(appState.current);
 
   const dispatch = useDispatch();
-  const {uidString, recentUsers} = useSelector(store => store.persistedReducer);
+  const {uidString, recentUsers, blockList} = useSelector(
+    store => store.persistedReducer,
+  );
 
   useEffect(() => {
-    
+    firestore()
+      .collection('Users')
+      .doc(uidString)
+      .collection('BlockList')
+      .get()
+      .then(res => {
+        console.log('Response after getting blockList', res);
+        const blockArray = res.docs.map(x => x.data().isBlocked);
+        console.log('BlockArray is', blockArray);
+        // dispatch(blockReducer)
+      })
+      .catch(err => {
+        console.log('Error in getting blockList', err);
+      });
+
     const subscriber = firestore()
-      .collection('RecentChats').doc(uidString).collection('RecentUsers')
+      .collection('RecentChats')
+      .doc(uidString)
+      .collection('RecentUsers')
       .onSnapshot(x => {
-        console.log('The recent Users are', x.docs)
         dispatch(recentUserReducer(x.docs));
       });
     return () => subscriber();
   }, []);
+
+  useEffect(() => {
+    userOnlineUpdate();
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      appState.current = nextAppState;
+      console.log('App has come to the foreground!');
+      userOnlineUpdate();
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
+  const userOnlineUpdate = () => {
+    setAppStateVisible(appState.current);
+    console.log('AppState', appState.current);
+    firestore().collection('Users').doc(uidString).update({
+      online: appState.current,
+    });
+  };
 
   useLayoutEffect(() => {
     firestore()
@@ -48,20 +88,39 @@ export default function RecentChats({navigation}) {
   }, [uidString]);
 
   const _renderItem = ({item}) => {
-    console.log('ITEMs are', item)
+    console.log('ITEMs are', item);
+    const lastMsgDate=new Date(item.data().lastMessageAt).toJSON()
+
     return (
       <React.Fragment>
         {item.data().id != uidString && (
           <TouchableOpacity
             style={styles.renderItem}
             onPress={() => {
-              _userItemPress(item.data().id);
+              _userItemPress(item.data().id, item.data().phone);
             }}>
             <ImageComponent style={styles.imageStyle} />
 
-            <TextComponent
-              style={{color: colors.white}}
-              text={item.data().phone}
+            <ViewComponent
+            style={{flexDirection:'row'}}
+              child={
+                <React.Fragment>
+                  <ViewComponent child={
+                      <React.Fragment>
+                      <TextComponent
+                        style={{color: colors.white}}
+                        text={item.data().phone}
+                      />
+                      <TextComponent
+                        style={{color: 'white'}}
+                        text={item.data()?.lastMessage}
+                      />
+                      </React.Fragment>
+                  } />
+                  
+                  <TextComponent style={{color:'white'}} text={`${lastMsgDate}`}/>
+                </React.Fragment>
+              }
             />
           </TouchableOpacity>
         )}
@@ -73,9 +132,9 @@ export default function RecentChats({navigation}) {
     navigation.push('contactList');
   };
 
-  const _userItemPress = x => {
-    const roomId = x < uidString ? x + uidString : uidString + x;
-    navigation.navigate('chatRoom', {roomId});
+  const _userItemPress = (userId, phoneNum) => {
+    const roomId = userId < uidString ? userId + uidString : uidString + userId;
+    navigation.navigate('chatRoom', {roomId, userId, phoneNum});
   };
 
   return (

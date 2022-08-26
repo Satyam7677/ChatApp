@@ -7,12 +7,13 @@ import ImagePicker from 'react-native-image-crop-picker';
 import ButtonComponent from '../../../components/buttonComponent';
 import colors from '../../../utils/locale/colors';
 import ViewComponent from '../../../components/viewComponent';
-
 import TextComponent from '../../../components/textComponent';
+import { useSelector } from 'react-redux';
 
 export default function Profile() {
   const [img, setImg] = useState(null);
-
+  const {uidString}=useSelector((store)=>store.persistedReducer)
+  console.log('uidString',uidString)
   const cameraPress = () => {
     ImagePicker.openPicker({
       width: 300,
@@ -20,6 +21,7 @@ export default function Profile() {
       cropping: true,
     })
       .then(image => {
+        console.log('image',image)
         Platform.OS == 'ios' ? setImg(image.sourceURL) : setImg(image.path);
       })
       .catch(err => {

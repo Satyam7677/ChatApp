@@ -12,15 +12,18 @@ import {Bubble, GiftedChat} from 'react-native-gifted-chat';
 import SafeAreaComponent from '../../../components/safeAreaComponent';
 import HomeHeader from '../../../routes/routeHeaders/homeHeader';
 import ChatHeader from '../../../components/chatHeader';
+import {debounce} from '../../../utils/commonFunctions';
 
 const {width} = Dimensions.get('screen');
 
 export default function ChatRoom({route, navigation}) {
-  const {roomId,x, phoneNum} = route.params;
+  const {roomId, userId, phoneNum} = route.params;
   const [text, setText] = useState(null);
   const dispatch = useDispatch();
   const {uidString} = useSelector(store => store.persistedReducer);
   const [messageArray, setMessageArray] = useState([]);
+  const [typing, setTyping] = useState(false);
+  const [timer, setTimer] = useState(null);
   const ref = useRef();
   useLayoutEffect(() => {
     const subscriber = firestore()
@@ -37,35 +40,82 @@ export default function ChatRoom({route, navigation}) {
         setMessageArray(dataArray);
       });
 
+    const typingListener = firestore()
+      .collection('ChatRooms')
+      .doc(roomId)
+      .collection(userId)
+      .doc('CurrentState')
+      .onSnapshot(snapShot => { 
+        console.log('SnapShot', snapShot);
+        setTyping(snapShot?.data()?.isTyping);
+      });
+
     // Stop listening for updates when no longer required
-    return subscriber;
+    return () => {
+      subscriber();
+      typingListener();
+    };
   }, [roomId]);
 
   const onSend = (message = []) => {
-    console.log('MessageArray is', messageArray.length)
-    if(messageArray.length==0)
-    {
-      console.log('Inside msg Array', messageArray)
-      firestore().collection('RecentChats').doc(uidString).collection('RecentUsers').add({
-        id:x,
-        phone:phoneNum
-      })
+    console.log('MessageArray is', messageArray);
+    if (messageArray.length == 0) {
+      console.log('Inside msg Array', messageArray);
+      firestore()
+        .collection('RecentChats')
+        .doc(uidString)
+        .collection('RecentUsers')
+        .doc(userId)
+        .set({
+          id: userId,
+          phone: phoneNum,
+          lastMessage: text,
+          lastMessageAt: new Date().getTime(),
+        })
+        .then(() => {
+          console.log('Success on adding recentChat');
+        })
+        .catch(() => {
+          console.log('Failure to add first chat ');
+        });
+    } else {
+      firestore()
+        .collection('RecentChats')
+        .doc(uidString)
+        .collection('RecentUsers')
+        .doc(userId)
+        .update({
+          lastMessage: text,
+          lastMessageAt: new Date().getTime(),
+        });
     }
     const msg = {
       _id: Math.random(),
       text: text,
       createdAt: new Date().getTime(),
+      sent: true,
+      // pending:true,
+      received: true,
       user: {
         _id: uidString,
         name: 'React Native',
       },
     };
     setMessageArray(previousMessage => GiftedChat.append(previousMessage, msg));
+
+    //If the sender is in the app users blockList then do not send msg
+
     firestore()
       .collection('ChatRooms')
       .doc(roomId)
       .collection('messages')
-      .add(msg);
+      .add(msg)
+      .then(() => {
+        'Message added';
+      })
+      .catch(() => {
+        console.log('Message addition failed');
+      });
     setText('');
   };
 
@@ -100,8 +150,39 @@ export default function ChatRoom({route, navigation}) {
             backgroundColor: 'green',
           },
         }}
+        tickStyle={{color: 'white'}}
       />
     );
+  };
+
+  const funTyping = bool => {
+    firestore()
+      .collection('ChatRooms')
+      .doc(roomId)
+      .collection(uidString)
+      .doc('CurrentState')
+      .set({
+        isTyping: bool,
+      })
+      .then(() => {
+        console.log('typingSuccess');
+      })
+      .catch(err => {
+        console.log('Typing Failure', err);
+      });
+  };
+
+  const inputChanged = e => {
+    setText(e);
+    funTyping(true);
+
+    clearTimeout(timer);
+
+    const newTimer = setTimeout(() => {
+      funTyping(false);
+    }, 2000);
+
+    setTimer(newTimer);
   };
 
   return (
@@ -109,21 +190,19 @@ export default function ChatRoom({route, navigation}) {
       style={{flex: 1}}
       child={
         <React.Fragment>
-        <ChatHeader head={phoneNum} backCallback={onBackPress}/>
-        <GiftedChat
-          renderBubble={_renderBubble}
-          messagesContainerStyle={style.messageStyle}
-          renderAvatar={null}
-          onInputTextChanged={txt => {
-            setText(txt);
-          }}
-          user={{
-            _id: uidString,
-          }}
-          messages={messageArray}
-          onSend={onSend}
-          
-        />
+          <ChatHeader head={phoneNum} id={userId} backCallback={onBackPress} />
+          <GiftedChat
+            isTyping={typing}
+            renderBubble={_renderBubble}
+            messagesContainerStyle={style.messageStyle}
+            renderAvatar={null}
+            onInputTextChanged={inputChanged}
+            user={{
+              _id: uidString,
+            }}
+            messages={messageArray}
+            onSend={onSend}
+          />
         </React.Fragment>
       }
     />

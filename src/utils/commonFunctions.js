@@ -61,5 +61,11 @@ const signOut=(successCallback, failureCallback)=>{
   });
 }
 
+const debounce=(func)=>{
+  setTimeout(()=>{
+    func()
+  },1000)
+}
 
-export {otpVerification, signInWithPhoneNumber,signOut}
+
+export {otpVerification, signInWithPhoneNumber,signOut, debounce}

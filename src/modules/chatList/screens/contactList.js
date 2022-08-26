@@ -8,6 +8,7 @@ import ButtonComponent from '../../../components/buttonComponent';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import {
+  blockReducer,
   uid,
   userListReducer,
 } from '../../../reducer/rootReducer';
@@ -30,10 +31,12 @@ export default function RecentChats({navigation}) {
   const {userList} = useSelector(store => store.persistedReducer);
 
   const dispatch = useDispatch();
-  const {uidString} = useSelector(store => store.persistedReducer);
+  const {uidString, blockList} = useSelector(store => store.persistedReducer);
+
+
+  
 
   useEffect(() => {
-    console.log('UserLisrt ',userList );
     const subscriber = firestore()
       .collection('Users').onSnapshot(x => {
         dispatch(userListReducer(x.docs))
@@ -55,18 +58,73 @@ export default function RecentChats({navigation}) {
   }, [uidString]);
 
 
+  const blockSuccessCallback = (blockedUser)=>{
+    console.log('Block success')
+      dispatch(blockReducer([...blockList, blockedUser]))
+  }
 
+
+  const blockFailureCallback = ()=>{
+
+  }
+  
+
+  const unblockSuccessCallback=(ind)=>{
+    console.log('unblockSuccess', ind,blockList)
+  const x = blockList.splice(ind,1)
+    console.log('After splice', blockList)
+    dispatch(blockReducer(blockList))
+  }
+
+  const unblockFailureCallback=()=>{
+    
+  }
 
 
   const _renderItem = ({item}) => {
     console.log('Items in list', item)
+   const otherUserId = item.data().id
     return (
       <React.Fragment>
         {item.data().id != uidString && (
           <TouchableOpacity
             style={styles.renderItem}
             onPress={() => {
-              _userItemPress(item.data().id,item.data().phone );
+              _userItemPress(otherUserId,item.data().phone );
+            }}
+
+
+            onLongPress={()=>{
+              console.log('BlockList', blockList)
+              const ind = blockList.findIndex(element=>element==otherUserId)
+              if(ind!=-1)
+              {
+                firestore().collection('Users').doc(uidString).collection('BlockList').doc(otherUserId).delete().then(
+                  (res)=>{
+                    unblockSuccessCallback(ind)
+                    // console.log('Response after block', res)
+                  }
+                ).catch(
+                  ()=>{
+                    //unblockFailureCallback()
+                    
+                  }
+                )
+              }
+              else
+              {
+                firestore().collection('Users').doc(uidString).collection('BlockList').doc(otherUserId).set({
+                  isBlocked:true,
+                  id:otherUserId
+                }).then(
+                  (res)=>{
+                    blockSuccessCallback(otherUserId)
+                    // console.log('Response after unblock', res)
+                  }
+                ).catch(()=>{
+                  //  blockFailureCallback() 
+                })
+              }
             }}>
             <ImageComponent style={styles.imageStyle} />
 
@@ -81,9 +139,9 @@ export default function RecentChats({navigation}) {
   };
 
 
-  const _userItemPress = (x, phoneNum) => {
-    const roomId = x < uidString ? x + uidString : uidString + x;
-    navigation.replace('chatRoom', {roomId,x, phoneNum});
+  const _userItemPress = (userId, phoneNum) => {
+    const roomId = userId < uidString ? userId + uidString : uidString + userId;
+    navigation.replace('chatRoom', {roomId,userId, phoneNum});
   };
 
   return (

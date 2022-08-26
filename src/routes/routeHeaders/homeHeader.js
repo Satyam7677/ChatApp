@@ -15,6 +15,7 @@ import { uid } from '../../reducer/rootReducer';
 import { signOut } from '../../utils/commonFunctions';
 
 
+
 const HomeHeader = () => {
   const navigation = useNavigation()
   const [optionsVisible, setOptionsVisible] = useState(false);
@@ -70,9 +71,20 @@ const HomeHeader = () => {
                 <TouchableOpacity onPress={signOutPress}>
                   <TextComponent text={strings.signOut} />
                 </TouchableOpacity>
+
+                <TouchableOpacity onPress={()=>{
+                  setOptionsVisible(false)
+                  navigation.navigate(screenNames.profile)
+                }}>
+                  <TextComponent text={'Profile'} style={{color:'black'}} />
+                </TouchableOpacity>
+                
                 <TouchableOpacity onPress={signOut}>
                   <TextComponent text={strings.settings} />
                 </TouchableOpacity>
+
+               
+                
               </React.Fragment>
             }
             onClose={onClose}
