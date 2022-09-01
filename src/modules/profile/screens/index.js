@@ -1,33 +1,109 @@
-import {Platform, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import React, {useState} from 'react';
+import {Platform, Text, TouchableOpacity} from 'react-native';
+import React, {useEffect, useLayoutEffect, useState} from 'react';
 import ImageComponent from '../../../components/imageComponent';
 import images from '../../../utils/locale/images';
 import {vh, vw} from '../../../utils/dimensions';
-import ImagePicker from 'react-native-image-crop-picker';
 import ButtonComponent from '../../../components/buttonComponent';
 import colors from '../../../utils/locale/colors';
 import ViewComponent from '../../../components/viewComponent';
 import TextComponent from '../../../components/textComponent';
-import { useSelector } from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
+import Tooltip from 'react-native-walkthrough-tooltip';
+import TextInputComponent from '../../../components/textInput';
+import {
+  fireStoreFunctions,
+  imagePickerFunction,
+} from '../../../utils/commonFunctions';
+import {userDataReducer} from '../../../reducer/rootReducer';
+import {useNavigation} from '@react-navigation/native';
+import {screenNames} from '../../../utils/locale/strings';
+import { styles } from './styles';
 
 export default function Profile() {
   const [img, setImg] = useState(null);
-  const {uidString}=useSelector((store)=>store.persistedReducer)
-  console.log('uidString',uidString)
-  const cameraPress = () => {
-    ImagePicker.openPicker({
-      width: 300,
-      height: 400,
-      cropping: true,
-    })
-      .then(image => {
-        console.log('image',image)
-        Platform.OS == 'ios' ? setImg(image.sourceURL) : setImg(image.path);
-      })
-      .catch(err => {
-        console.log('The error in image picker ', err);
-      });
+  const {uidString, userData} = useSelector(store => store.persistedReducer);
+  const dispatch = useDispatch();
+  const [toolTipVisible, setToolTipVisible] = useState(false);
+  const [text, setText] = useState(null);
+  const [toolTipFor, setToolTipFor] = useState(null);
+  const navigation = useNavigation();
+
+  useLayoutEffect(() => {
+    fireStoreFunctions.getUserData(
+      uidString,
+      userDataSuccessCallback,
+      userDataFailureCallback,
+    );
+  }, [toolTipVisible]);
+
+  // useEffect(()=>{
+
+  // },[])
+
+  const userDataSuccessCallback = data => {
+    dispatch(userDataReducer(data));
   };
+
+  const cameraPress = () => {
+    imagePickerFunction(imagePickerSuccessCallback, imagePickerFailureCallback);
+  };
+
+  const imagePickerSuccessCallback = (imageURL, imagePath) => {
+    Platform.OS == 'ios' ? setImg(imageURL) : setImg(imagePath);
+  };
+
+  const setTextCallback = str => {
+    setText(str);
+  };
+
+  const commonToolTipOk = () => {
+    toolTipFor == 'Name'
+      ? fireStoreFunctions.setUserName(uidString, text)
+      : fireStoreFunctions.setAbout(uidString, text);
+    setToolTipVisible(false);
+  };
+
+  const okButtonPress = () => {
+    navigation.reset({
+      index: 0,
+      routes: [{name: screenNames.home}],
+    });
+  };
+
+  const tooltip = () => {
+    return (
+      <Tooltip
+        isVisible={toolTipVisible}
+        content={
+          <ViewComponent
+            child={
+              <React.Fragment>
+                <TextInputComponent
+                  styles={{color:'white'}}
+                  callbackFunc={setTextCallback}
+                  value={text}
+                  placeholder={toolTipFor==='Name'?'Enter name': 'Enter About'}
+                />
+                <ButtonComponent
+                  label={'Ok'}
+                  style={styles.profileTextInputButton}
+                  _onPress={() => {
+                    commonToolTipOk();
+                  }}
+                />
+              </React.Fragment>
+            }
+          />
+        }
+        onClose={() => {
+          setToolTipVisible(false);
+        }}
+        contentStyle={{backgroundColor: 'transparent'}}
+        tooltipStyle={styles.tooltipStyle}
+      />
+    );
+  };
+
   return (
     <ViewComponent
       style={styles.mainView}
@@ -45,7 +121,12 @@ export default function Profile() {
               imageStyle={styles.cameraImage}
             />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.userView}>
+          <TouchableOpacity
+            style={styles.userView}
+            onPress={() => {
+              setToolTipFor('Name');
+              setToolTipVisible(true);
+            }}>
             <ImageComponent
               imgSrc={images.user}
               style={styles.userImageStyle}
@@ -59,7 +140,10 @@ export default function Profile() {
               child={
                 <React.Fragment>
                   <TextComponent text={'Name'} style={{color: colors.grey}} />
-                  <TextComponent text={'Saa'} style={{color: colors.white, textWeight:'100'}} />
+                  <TextComponent
+                    text={userData?.name}
+                    style={{color: colors.white, textWeight: '100'}}
+                  />
                   <TextComponent
                     text={'This username is visible to other users'}
                     style={{color: colors.grey}}
@@ -68,7 +152,12 @@ export default function Profile() {
               }
             />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.userView}>
+          <TouchableOpacity
+            style={styles.userView}
+            onPress={() => {
+              setToolTipFor('About');
+              setToolTipVisible(true);
+            }}>
             <ImageComponent
               imgSrc={images.info}
               style={styles.userImageStyle}
@@ -82,10 +171,9 @@ export default function Profile() {
               child={
                 <React.Fragment>
                   <TextComponent text={'About'} style={{color: colors.grey}} />
-                  <TextComponent text={'Saa'} style={{color: colors.white, textWeight:'100'}} />
                   <TextComponent
-                    text={'About is this'}
-                    style={{color: colors.grey}}
+                    text={userData?.about}
+                    style={{color: colors.white, textWeight: '100'}}
                   />
                 </React.Fragment>
               }
@@ -106,58 +194,28 @@ export default function Profile() {
               child={
                 <React.Fragment>
                   <TextComponent text={'Phone'} style={{color: colors.grey}} />
-                  <TextComponent text={'+917666627728'} style={{color: colors.white, textWeight:'100'}} />
+                  <TextComponent
+                    text={`+91${userData?.phone}`}
+                    style={{color: colors.white, textWeight: '100'}}
+                  />
                 </React.Fragment>
               }
             />
           </TouchableOpacity>
+
+          <ButtonComponent style={styles.okButtonPress} label={'Ok'} _onPress={okButtonPress} />
+          {tooltip(toolTipVisible)}
         </React.Fragment>
       }
     />
   );
 }
 
-const styles = StyleSheet.create({
-  mainView: {
-    flex: 1,
-  },
-  profileImageStyle: {
-    borderRadius: vw(100),
-    height: vh(170),
-    width: vh(170),
-    alignSelf: 'center',
-  },
-  cameraButtonStyle: {
-    borderRadius: vw(50),
-    height: vh(45),
-    width: vh(45),
-    backgroundColor: colors.purple,
-    position: 'absolute',
-    bottom: 0,
-    right: vw(10),
-  },
-  cameraImage: {
-    tintColor: colors.white,
-  },
-  profileImageView: {
-    height: vh(170),
-    width: vh(170),
-    alignSelf: 'center',
-    borderRadius: vw(100),
-    marginTop: vh(10),
-  },
-  userView: {
-    height: vh(90),
-    flexDirection: 'row',
-    overflow: 'hidden',
-    alignItems: 'center',
+const imagePickerFailureCallback = err => {
+  console.log('Image picker error', err);
+};
 
-    // backgroundColor:'red'
-  },
-  userImageStyle: {
-    tintColor: colors.white,
-    height: vh(25),
-    width: vw(25),
-    marginHorizontal: vw(12),
-  },
-});
+const userDataFailureCallback = () => {
+  console.log('Error', err);
+};
+

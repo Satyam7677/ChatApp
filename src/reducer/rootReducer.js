@@ -7,7 +7,8 @@ const initialState = {
   userOnApp:[],
   messageArray:[],
   recentUsers:[],
-  blockList:[]
+  recieverBlockList:[],
+  userData:{},
 };
 
 const slice = createSlice({
@@ -34,10 +35,14 @@ const slice = createSlice({
     },
     blockReducer:(state, action)=>{
       state.blockList = action.payload
+    },
+    userDataReducer:(state, action)=>{
+      state.userData= action.payload
     }
+
 
   },
 });
 
-export const {uid, userListReducer,usersOnApp,userMessageArrayReducer,recentUserReducer,blockReducer} = slice.actions;
+export const {uid, userListReducer,usersOnApp,userMessageArrayReducer,recentUserReducer,blockReducer,userDataReducer} = slice.actions;
 export default slice.reducer;

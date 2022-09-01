@@ -1,138 +1,147 @@
-import React, {useLayoutEffect, useRef, useState} from 'react';
-import {
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  StyleSheet,
-  Dimensions,
-} from 'react-native';
-import firestore from '@react-native-firebase/firestore';
+import React, { useEffect, useLayoutEffect, useRef, useState} from 'react';
+import { Clipboard, TouchableOpacity} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
-
 import {Bubble, GiftedChat} from 'react-native-gifted-chat';
 import SafeAreaComponent from '../../../components/safeAreaComponent';
-import HomeHeader from '../../../routes/routeHeaders/homeHeader';
 import ChatHeader from '../../../components/chatHeader';
-import {debounce} from '../../../utils/commonFunctions';
-
-const {width} = Dimensions.get('screen');
+import {fireStoreFunctions} from '../../../utils/commonFunctions';
+import {style} from './styles';
+import colors from '../../../utils/locale/colors';
+import Tooltip from 'react-native-walkthrough-tooltip';
+import TextComponent from '../../../components/textComponent';
+import ViewComponent from '../../../components/viewComponent';
+import { userDataReducer } from '../../../reducer/rootReducer';
 
 export default function ChatRoom({route, navigation}) {
-  const {roomId, userId, phoneNum} = route.params;
+  const {roomId, userId, phoneNum, name} = route.params;
   const [text, setText] = useState(null);
-  const dispatch = useDispatch();
-  const {uidString} = useSelector(store => store.persistedReducer);
+  const {uidString, userData} = useSelector(store => store.persistedReducer);
   const [messageArray, setMessageArray] = useState([]);
   const [typing, setTyping] = useState(false);
   const [timer, setTimer] = useState(null);
-  const ref = useRef();
+  const [optionsVisible, setOptionsVisible] = useState(false);
+  // const {recieverBlockList} = useSelector(store=>store.persistedReducer)
+  const dispatch = useDispatch()
+
   useLayoutEffect(() => {
-    const subscriber = firestore()
-      .collection('ChatRooms')
-      .doc(roomId)
-      .collection('messages')
-      .onSnapshot(documentSnapshot => {
-        const dataArray = documentSnapshot.docs.map(element => {
-          return element.data();
-        });
-        dataArray.sort((a, b) => {
-          return b.createdAt - a.createdAt;
-        });
-        setMessageArray(dataArray);
-      });
 
-    const typingListener = firestore()
-      .collection('ChatRooms')
-      .doc(roomId)
-      .collection(userId)
-      .doc('CurrentState')
-      .onSnapshot(snapShot => { 
-        console.log('SnapShot', snapShot);
-        setTyping(snapShot?.data()?.isTyping);
-      });
+    // const blockListener=fireStoreFunctions.blockListener(userId, checkBlockSuccessCallback)
+    
+    const subscriber = fireStoreFunctions.roomListener(
+      roomId,
+      setMessageArrayCallback,
+      userId
+    );
 
-    // Stop listening for updates when no longer required
+    const typingListener = fireStoreFunctions.typingListener(
+      roomId,
+      userId,
+      setTypingCallback,
+    );
+
     return () => {
-      subscriber();
-      typingListener();
+
+      subscriber;
+      typingListener;
+
+      setMessageArray(null)
     };
-  }, [roomId]);
+  }, []);
 
-  const onSend = (message = []) => {
-    console.log('MessageArray is', messageArray);
-    if (messageArray.length == 0) {
-      console.log('Inside msg Array', messageArray);
-      firestore()
-        .collection('RecentChats')
-        .doc(uidString)
-        .collection('RecentUsers')
-        .doc(userId)
-        .set({
-          id: userId,
-          phone: phoneNum,
-          lastMessage: text,
-          lastMessageAt: new Date().getTime(),
-        })
-        .then(() => {
-          console.log('Success on adding recentChat');
-        })
-        .catch(() => {
-          console.log('Failure to add first chat ');
-        });
-    } else {
-      firestore()
-        .collection('RecentChats')
-        .doc(uidString)
-        .collection('RecentUsers')
-        .doc(userId)
-        .update({
-          lastMessage: text,
-          lastMessageAt: new Date().getTime(),
-        });
-    }
-    const msg = {
-      _id: Math.random(),
-      text: text,
-      createdAt: new Date().getTime(),
-      sent: true,
-      // pending:true,
-      received: true,
-      user: {
-        _id: uidString,
-        name: 'React Native',
-      },
-    };
-    setMessageArray(previousMessage => GiftedChat.append(previousMessage, msg));
+  // const checkBlockSuccessCallback=(data)=>{
+  //   dispatch(blockReducer(data))
 
-    //If the sender is in the app users blockList then do not send msg
+  // }
 
-    firestore()
-      .collection('ChatRooms')
-      .doc(roomId)
-      .collection('messages')
-      .add(msg)
-      .then(() => {
-        'Message added';
-      })
-      .catch(() => {
-        console.log('Message addition failed');
-      });
-    setText('');
+  useEffect(()=>{
+    fireStoreFunctions.chatRecieved(roomId, uidString)
+  },[messageArray])
+
+  // const {blockList} =userData
+
+  const setTypingCallback = typing => {
+    setTyping(typing);
   };
 
-  // const onLongPress = item => {
-  //   firestore()
-  //     .collection('ChatRooms')
-  //     .doc(roomId)
-  //     .collection(roomId)
-  //     .doc(item)
-  //     .delete()
-  //     .then(() => {
-  //       console.log('Message deleted!');
-  //     })
-  //     .catch(err => {
-  //       console.log('Message delete error', err);
-  //     });
-  // };
+
+    // const userIndex= blockList?.findIndex(e=>e==userId)
+    // const recieverIndex= recieverBlockList?.findIndex(e=>e==uidString)
+  
+  
+
+  const setMessageArrayCallback = data => {
+    const userFilteredData = data.filter(element => {
+      return element?.deletedBy == uidString  || element?.deletedBy == roomId 
+        ? false
+        : true;
+    });
+    setMessageArray(userFilteredData);
+  };
+
+  
+
+  const onSend = (message = []) => {
+
+    const msg = {
+      _id: message[0]._id,
+      text: text,
+      createdAt: new Date().getTime(),
+      reciever: {
+        _id: userId,
+        name,
+      },
+      user: {
+        _id: uidString,
+        name: userData?.name,
+      },
+      sent:true,
+      received:false
+    };
+
+    setMessageArray(previousMessage => GiftedChat.append(previousMessage, msg));
+    fireStoreFunctions.addMessage(
+      'ChatRooms',
+      roomId,
+      'messages',
+      msg._id,
+      msg,
+    );
+
+    const userContent = {
+      id: userId,
+      phone: phoneNum,
+      name: name,
+      lastMessage: text,
+      lastMessageAt: new Date().getTime(),
+      roomId,
+    };
+
+    fireStoreFunctions.updateRecentChats(
+      'Inbox',
+      uidString,
+      'RecentUsers',
+      userId,
+      userContent,
+    );
+
+    const recieverContent = {
+      id: uidString,
+      phone: userData?.phone,
+      name: userData?.name,
+      lastMessage: text,
+      lastMessageAt: new Date().getTime(),
+      roomId,
+    };
+
+    fireStoreFunctions.updateRecentChats(
+      'Inbox',
+      userId,
+      'RecentUsers',
+      uidString,
+      recieverContent,
+    );
+    setText('');
+  };
 
   const onBackPress = () => {
     navigation.goBack();
@@ -144,10 +153,10 @@ export default function ChatRoom({route, navigation}) {
         {...props}
         wrapperStyle={{
           left: {
-            backgroundColor: 'grey',
+            backgroundColor: colors.white,
           },
           right: {
-            backgroundColor: 'green',
+            backgroundColor: colors.purple,
           },
         }}
         tickStyle={{color: 'white'}}
@@ -155,42 +164,259 @@ export default function ChatRoom({route, navigation}) {
     );
   };
 
-  const funTyping = bool => {
-    firestore()
-      .collection('ChatRooms')
-      .doc(roomId)
-      .collection(uidString)
-      .doc('CurrentState')
-      .set({
-        isTyping: bool,
-      })
-      .then(() => {
-        console.log('typingSuccess');
-      })
-      .catch(err => {
-        console.log('Typing Failure', err);
-      });
+  const onDeleteForMe = message => {
+    fireStoreFunctions.delete(
+      roomId,
+      message._id,
+      message?.deletedBy ? roomId : uidString,
+    );
+    if (messageArray[0]._id === message._id && messageArray.length > 1) {
+      const userContent = {
+        id: userId,
+        phone: phoneNum,
+        name: name,
+        lastMessage: messageArray[1].text,
+        lastMessageAt: messageArray[1].createdAt,
+        roomId,
+      };
+      fireStoreFunctions.updateRecentChats(
+        'Inbox',
+        uidString,
+        'RecentUsers',
+        userId,
+        userContent,
+      );
+    } else if (
+      messageArray[0]._id === message._id &&
+      messageArray.length == 1
+    ) {
+      const userContent = {
+        id: userId,
+        phone: phoneNum,
+        name: name,
+        lastMessage: '',
+        lastMessageAt: '',
+        roomId,
+      };
+      fireStoreFunctions.updateRecentChats(
+        'Inbox',
+        uidString,
+        'RecentUsers',
+        userId,
+        userContent,
+      );
+    }
   };
 
-  const inputChanged = e => {
-    setText(e);
-    funTyping(true);
+  const onDeleteForEveryone = message => {
+    fireStoreFunctions.delete(roomId, message._id, roomId);
+    if (messageArray[0]._id === message._id && messageArray.length > 1) {
+      const userContent = {
+        id: userId,
+        phone: phoneNum,
+        name: name,
+        lastMessage: messageArray[1].text,
+        lastMessageAt: messageArray[1].createdAt,
+        roomId,
+      };
 
-    clearTimeout(timer);
+      const recieverContent = {
+        id: uidString,
+        phone: userData?.phone,
+        name: userData?.name,
+        lastMessage: messageArray[1].text,
+        lastMessageAt: messageArray[1].createdAt,
+        roomId,
+      };
+      fireStoreFunctions.updateRecentChats(
+        'Inbox',
+        uidString,
+        'RecentUsers',
+        userId,
+        userContent,
+      );
+      fireStoreFunctions.updateRecentChats(
+        'Inbox',
+        userId,
+        'RecentUsers',
+        uidString,
+        recieverContent,
+      );
+    } else if (
+      messageArray[0]._id === message._id &&
+      messageArray.length == 1
+    ) {
+      const userContent = {
+        id: userId,
+        phone: phoneNum,
+        name: name,
+        lastMessage: '',
+        lastMessageAt: '',
+        roomId,
+      };
 
-    const newTimer = setTimeout(() => {
-      funTyping(false);
-    }, 2000);
-
-    setTimer(newTimer);
+      const recieverContent = {
+        id: uidString,
+        phone: userData?.phone,
+        name: userData?.name,
+        lastMessage: '',
+        lastMessageAt: '',
+        roomId,
+      };
+      fireStoreFunctions.updateRecentChats(
+        'Inbox',
+        uidString,
+        'RecentUsers',
+        userContent,
+      );
+      fireStoreFunctions.updateRecentChats(
+        'Inbox',
+        userId,
+        'RecentUsers',
+        recieverContent,
+      );
+    }
   };
+
+  const messageLongPress = (context, message) => {
+    if (message.text !== 'This message was deleted') {
+      let options;
+      let cancelButtonIndex;
+      if (message.user._id === uidString) {
+        options = [
+          'Copy Text',
+          'Delete For Me',
+          'Delete For Everyone',
+          'Cancel',
+        ];
+        cancelButtonIndex = options.length - 1;
+        context.actionSheet().showActionSheetWithOptions(
+          {
+            options,
+            cancelButtonIndex,
+          },
+          buttonIndex => {
+            switch (buttonIndex) {
+              case 0:
+                Clipboard.setText(message.text);
+                break;
+              case 1:
+                onDeleteForMe(message);
+                break;
+              case 2:
+                onDeleteForEveryone(message);
+                break;
+            }
+          },
+        );
+      } else {
+        options = ['Copy Text', 'Delete For Me', 'Cancel'];
+        cancelButtonIndex = options.length - 1;
+        context.actionSheet().showActionSheetWithOptions(
+          {
+            options,
+            cancelButtonIndex,
+          },
+          buttonIndex => {
+            switch (buttonIndex) {
+              case 0:
+                Clipboard.setString(message.text);
+                break;
+              case 1:
+                onDeleteForMe(message);
+                break;
+            }
+          },
+        );
+      }
+    }
+  };
+
+  const inputChanged = text => {
+    if (text.length > 0) {
+      setText(text);
+      fireStoreFunctions.typingFunction(
+        true,
+        'ChatRooms',
+        roomId,
+        uidString,
+        'CurrentStatus',
+      );
+      clearTimeout(timer);
+      const newTimer = setTimeout(() => {
+        fireStoreFunctions.typingFunction(
+          false,
+          'ChatRooms',
+          roomId,
+          uidString,
+          'CurrentStatus',
+        );
+      }, 1500);
+      setTimer(newTimer);
+    }
+  };
+
+  const toolTipCallback = () => {
+    setOptionsVisible(true);
+  };
+
+  const closeOptions = () => {
+    setOptionsVisible(false);
+  };
+
+  const clearChats = () => {
+    setOptionsVisible(false);
+    fireStoreFunctions.clearChats(roomId, uidString, userId)
+    
+    // fireStoreFunctions.resetRecentChat()
+  };
+
+  const blockUser=()=>{
+
+    setOptionsVisible(false)
+  //   if(blockList?.length>0)
+  //   {
+  //     const nArray= blockList?.map(ele=>ele)
+  //     nArray.append(userId)
+  //   fireStoreFunctions.blockUser(uidString, nArray,blockSuccessCallback)
+  // }
+  // else
+  //  { const blockArray = [userId]
+  //   fireStoreFunctions.blockUser(uidString, blockArray, blockSuccessCallback)
+  // }
+    
+  }
+
+  // const unblockUser = ()=>{
+  //   setOptionsVisible(false)
+  //   const nArray= blockList?.map(ele=>ele)
+  //   nArray?.splice(userIndex,1)
+  //   fireStoreFunctions.unblockUser(uidString,nArray, blockSuccessCallback)
+  // }
+
+  // const blockSuccessCallback=()=>{
+  //   fireStoreFunctions.getUserData(uidString,getDataSuccessCallback, getDataFailureCallback)
+  // }
+  // const getDataSuccessCallback=(data)=>{
+  //   dispatch(userDataReducer(data))
+  // }
+
+  // const getDataFailureCallback=(err)=>{
+  //   console.log('Getting Data error',err)
+  // }
 
   return (
     <SafeAreaComponent
       style={{flex: 1}}
       child={
         <React.Fragment>
-          <ChatHeader head={phoneNum} id={userId} backCallback={onBackPress} />
+          <ChatHeader
+            head={name ? name : phoneNum}
+            id={userId}
+            uid={uidString}
+            backCallback={onBackPress}
+            toolTipCallback={toolTipCallback}
+          />
           <GiftedChat
             isTyping={typing}
             renderBubble={_renderBubble}
@@ -202,53 +428,31 @@ export default function ChatRoom({route, navigation}) {
             }}
             messages={messageArray}
             onSend={onSend}
+            onLongPress={messageLongPress}
+          />
+          <Tooltip
+            placement="right"
+            tooltipStyle={style.tooltipStyle}
+            topAdjustment={10}
+            onClose={closeOptions}
+            contentStyle={{backgroundColor:'transparent', justifyContent:'space-between'}}
+            isVisible={optionsVisible}
+            content={
+              <ViewComponent style={style.toolTipView} child={
+              <React.Fragment>
+                <TouchableOpacity onPress={clearChats}>
+                  <TextComponent style={{color:'white'}} text={'Clear Chats'} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={blockUser}>
+                  <TextComponent style={{color:'white'}} text={'block' }/>
+                </TouchableOpacity>
+              </React.Fragment>
+              }
+              />
+            }
           />
         </React.Fragment>
       }
     />
   );
 }
-
-const style = StyleSheet.create({
-  textInputView: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    paddingHorizontal: 10,
-  },
-  textInput: {
-    backgroundColor: '#CAC9C9',
-    flex: 1,
-    height: 40,
-    borderRadius: 5,
-    marginHorizontal: 10,
-    width: 250,
-    fontSize: 20,
-    paddingHorizontal: 10,
-  },
-  buttonStyle: {
-    backgroundColor: 'green',
-    justifyContent: 'center',
-    width: 100,
-    height: 40,
-  },
-  mainView: {
-    flex: 1,
-  },
-  messageView: {
-    maxWidth: width / 1.1,
-    marginVertical: 2,
-    justifyContent: 'center',
-    borderRadius: 17,
-    height: 'auto',
-    alignItems: 'center',
-    minHeight: 40,
-    minWidth: 60,
-    marginHorizontal: 2,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-  },
-  messageStyle: {
-    // backgroundColor:colors.grey,
-  },
-});

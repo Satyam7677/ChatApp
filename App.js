@@ -10,10 +10,11 @@ import {persistor} from './src/reducer/store';
 
 import rootReducer from './src/reducer/rootReducer';
 import { PersistGate } from 'redux-persist/integration/react';
-
+import { LogBox } from 'react-native';
 
 export default function App() {
-  console.log('root', rootReducer);
+
+  LogBox.ignoreAllLogs();
   return (
     <Provider store={store}>
       <PersistGate persistor={persistor}>

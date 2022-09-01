@@ -1,71 +1,347 @@
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
-
-const otpVerification= async (otp, phone,confirmation ,successCallback, failureCallback)=>{
-    try {
-      console.log('OTP coming is', otp)
-      console.log('Confirmation is', confirmation)
-        const response = await confirmation.confirm(otp);
-        console.log('Response is', response)
-        if (response) {
-          console.log('response is', response?.user?._user?.uid)
-          const docId=response?.user?._user?.uid
-
-          firestore().collection('Users').doc(docId).set({
-            id:docId,
-            phone:phone
-          }).then(()=>{
-            successCallback(docId)
-          }).catch((err)=>
-          failureCallback(err))
+import Snackbar from 'react-native-snackbar';
+import ImagePicker from 'react-native-image-crop-picker';
 
 
-        } else {
-          console.log('Verification failure');
-          failureCallback('Response Problem')
-        }
-      } catch (error) {
-        if (error.code == 'auth/invalid-verification-code') {
-          console.log('Error is---->',error.code)
-        } else {
-          console.log('Account linking error', error);
-          
-        }
-        failureCallback(error)
+
+const otpVerification=async (otp, confirmation,phone, successCallBack,failureCallback)=>{
+  try{const res = await confirmation.confirm(otp)
+  if(res)
+  {
+    const uidString = res?.user?._user?.uid
+    successCallBack(uidString)
+
+    const data =await firestore().collection('Users').doc(uidString).get()
+
+    console.log('DAAAATTTTTTAAAA', data.data())
+    if(data.data()!=undefined)
+    {firestore().collection('Users').doc(uidString).update(
+      {
+        id:uidString,
+        phone
       }
+    )}
+    else
+    {
+      firestore().collection('Users').doc(uidString).set(
+        {
+          id:uidString,
+          phone
+        }
+      )
+    }
+
+  }
+  }
+  catch(err){
+    failureCallback(err)
+  }
 }
-const signInWithPhoneNumber= async(phone,successCallback, failureCallback )=>{
-try {
-    const confirmation = await auth().signInWithPhoneNumber(
-      `+${+91 + phone}`,
-    );
+
+const signInWithPhoneNumber = async (
+  phone,
+  successCallback,
+  failureCallback,
+) => {
+  try {
+    const confirmation = await auth().signInWithPhoneNumber(`+${+91 + phone}`);
     if (confirmation) {
-      successCallback(confirmation)
+      successCallback(confirmation);
     } else {
-      console.log('not Recieved confirmation');
-      failureCallback()
+      failureCallback('Not recieved confrimation');
     }
   } catch (err) {
-    console.log('Error is', err);
-    failureCallback()
-  }}
+    failureCallback(errors(err?.code));
+  }
+};
 
-const signOut=(successCallback, failureCallback)=>{
+const signOut = (successCallback, failureCallback) => {
   auth()
-  .signOut()
-  .then(() => {
-    successCallback()
-  })
-  .catch(err => {
-    failureCallback(err)
+    .signOut()
+    .then(() => {
+      successCallback();
+    })
+    .catch(err => {
+      failureCallback(err);
+    });
+};
+
+const errors = err => {
+  switch (err) {
+    case 'auth/invalid-phone-number':
+      return 'Invalid Phone Number';
+    case 'auth/network-request-failed':
+      return 'Check Your Interner Connectivity';
+    case 'auth/invalid-verification-code':
+      return 'Invalid code: Please try again';
+    case 'auth/cancelled-popup-request':
+      return 'Sign In cancelled by user ';
+    default:
+      return 'Some unknown Error Found';
+  }
+};
+
+const snackbarFunction = txt => {
+  return Snackbar.show({
+    text: txt,
+    duration: Snackbar.LENGTH_SHORT,
   });
-}
+};
 
-const debounce=(func)=>{
-  setTimeout(()=>{
-    func()
-  },1000)
-}
+const imagePickerFunction = (successCallback, failureCallback) => {
+  ImagePicker.openPicker({
+    width: 300,
+    height: 400,
+    cropping: true,
+  })
+    .then(image => {
+      successCallback(image.sourceURL, image.path);
+    })
+    .catch(err => {
+      failureCallback(err);
+    });
+};
 
+const fireStoreFunctions = {
+  setUserName: (uid, name) => {
+    firestore().collection('Users').doc(uid).update({
+      name,
+    });
+  },
+  setAbout: (uid, about) => {
+    firestore().collection('Users').doc(uid).update({
+      about,
+    });
+  },
+  updateUserDetail:(uid,phone)=>{
+   firestore().collection('Users').doc(uid).update(
+    {
+                 id:uid,
+                  phone,
+    }
+   )
+  },
+  addMessage: (roomCollection, roomId, messageCollection, msgId, msg) => {
+    firestore()
+      .collection(roomCollection)
+      .doc(roomId)
+      .collection(messageCollection)
+      .doc(msgId)
+      .set(msg)
+      .then(() => {})
+      .catch(() => {});
+  },
+  updateRecentChats: (
+    inboxCollection,
+    userDocId,
+    recentUserCollection,
+    recieverUserId,
+    content,
+  ) => {
+    firestore()
+      .collection(inboxCollection)
+      .doc(userDocId)
+      .collection(recentUserCollection)
+      .doc(recieverUserId)
+      .set(content);
+  },
 
-export {otpVerification, signInWithPhoneNumber,signOut, debounce}
+  typingFunction: (bool, collectionRoom, roomId, uid, docName) => {
+    firestore()
+      .collection(collectionRoom)
+      .doc(roomId)
+      .collection(uid)
+      .doc(docName)
+      .set({
+        isTyping: bool,
+      });
+  },
+
+  getUserData: (uid, successCallback, failureCallback) => {
+    firestore()
+      .collection('Users')
+      .doc(uid)
+      .get()
+      .then(res => {
+        successCallback(res?.data());
+      })
+      .catch(err => {
+        failureCallback(err);
+      });
+  },
+
+  checkRecentInbox: (uid, recentCollection, callback) => {
+    firestore()
+      .collection('Inbox')
+      .doc(uid)
+      .collection(recentCollection)
+      .onSnapshot(x => {
+        callback(x?.docs);
+      });
+  },
+
+  updateOnlineState: (uid, currentState) => {
+    firestore().collection('Users').doc(uid).update({
+      online: currentState,
+    });
+  },
+  getAllUsers: (successCallBack, failureCallback) => {
+    firestore()
+      .collection('Users')
+      .get()
+      .then(res => {
+        successCallBack(res.docs);
+      })
+      .catch(err => {
+        failureCallback(err);
+      });
+  },
+
+  checkAllUsers: func => {
+    firestore()
+      .collection('Users')
+      .onSnapshot(x => {
+        func(x.docs);
+      });
+  },
+
+  roomListener: (roomId, setMessageArrayCallback, userId) => {
+    firestore()
+      .collection('ChatRooms')
+      .doc(roomId)
+      .collection('messages')
+      .onSnapshot(async documentSnapshot => {
+        const msgQuerySnapShot = await firestore()
+          .collection('ChatRooms')
+          .doc(roomId)
+          .collection('messages')
+          .get();
+        const batch = firestore().batch();
+        msgQuerySnapShot.forEach(documentSnapshot => {
+          if (documentSnapshot.data().reciever._id == userId)
+            batch.update(documentSnapshot.ref, {received: true});
+        });
+        const dataArray = documentSnapshot.docs.map(element => {
+          return element.data();
+        });
+        dataArray.sort((a, b) => {
+          return b.createdAt - a.createdAt;
+        });
+        setMessageArrayCallback(dataArray);
+      });
+  },
+
+  typingListener: (roomId, userId, callback) => {
+    firestore()
+      .collection('ChatRooms')
+      .doc(roomId)
+      .collection(userId)
+      .doc('CurrentStatus')
+      .onSnapshot(snapShot => {
+        callback(snapShot?.data()?.isTyping);
+      });
+  },
+  checkOnline: (id, onlineCallback) => {
+    firestore()
+      .collection('Users')
+      .doc(id)
+      .onSnapshot(snapshot => {
+        onlineCallback(snapshot.data().online);
+      });
+  },
+  blockUser: (uid, blockArray, successCallBack) => {
+    firestore().collection('Users').doc(uid).update(
+      {
+
+        blockList:blockArray
+      }
+    ).then(()=>{
+      successCallBack()
+    })
+  },
+
+  unblockUser: (userId, blockArray, successCallBack) => {
+    firestore()
+      .collection('Users')
+      .doc(userId).update({
+        blockList:blockArray
+      }).then(
+        ()=>successCallBack()
+      )
+    },
+      
+
+  chatRecieved: async (roomId, uid) => {
+    const msgQuerySnapShot = await firestore()
+      .collection('ChatRooms')
+      .doc(roomId)
+      .collection('messages')
+      .get();
+    const batch = firestore().batch();
+
+    msgQuerySnapShot.forEach(documentSnapshot => {
+      if (documentSnapshot?.data().user?._id != uid)
+        batch.update(documentSnapshot.ref, {received: true});
+    });
+
+    return batch.commit();
+  },
+  delete: (roomId, msgId, userId) => {
+    firestore()
+      .collection('ChatRooms')
+      .doc(roomId)
+      .collection('messages')
+      .doc(msgId)
+      .update({
+        deletedBy: userId,
+      });
+  },
+
+  clearChats: async (roomId, uid, userId) => {
+    const msgQuerySnapShot = await firestore()
+      .collection('ChatRooms')
+      .doc(roomId)
+      .collection('messages')
+      .get();
+    const batch = firestore().batch();
+    msgQuerySnapShot.forEach(documentSnapshot => {
+      const delBy = documentSnapshot?.data()?.deletedBy;
+      if (delBy == userId)
+        batch.update(documentSnapshot.ref, {deletedBy: roomId});
+      else if (delBy == roomId)
+        batch.update(documentSnapshot.ref, {deletedBy: roomId});
+      else batch.update(documentSnapshot.ref, {deletedBy: uid});
+    });
+
+    return batch.commit();
+  },
+  resetRecentChat: (uid, recieverId) => {
+    firestore()
+      .collection('Inbox')
+      .doc(uid)
+      .collection('RecentUsers')
+      .doc(recieverId)
+      .update({
+        text: '',
+        createdAt: '',
+      });
+  },
+  blockListener:(userId, successCallBack)=>{
+    firestore().collection('Users').doc(userId).onSnapshot(
+      documentSnapshot=>{
+        successCallBack(documentSnapshot?.data(userId)?.blockList)
+      }
+    )
+  }
+};
+
+export {
+  otpVerification,
+  imagePickerFunction,
+  signInWithPhoneNumber,
+  signOut,
+  snackbarFunction,
+  errors,
+  fireStoreFunctions,
+};

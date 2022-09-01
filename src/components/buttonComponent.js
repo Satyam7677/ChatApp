@@ -3,14 +3,16 @@ import React from 'react'
 import ImageComponent from './imageComponent'
 import TextComponent from './textComponent'
 import colors from '../utils/locale/colors'
+import { vh, vw } from '../utils/dimensions'
+
 
 
 export default function ButtonComponent({label,imgSrc,imageStyle, _onPress,...rest}) {
-    const {style, labelColor,  uri}= rest
+    const {style, labelStyle,  uri}= rest
   return (
    <TouchableOpacity style={[styles.defaultButton,style]} onPress={_onPress}>
        {imgSrc && <ImageComponent imgSrc={imgSrc} uri={{uri}} source={imgSrc | uri} style={[styles.imgStyle, imageStyle]}/>}
-      {label && <TextComponent style={[styles.defaultText, {color:labelColor}]} text={label}/>}
+      {label && <TextComponent style={[styles.defaultText, labelStyle]} text={label}/>}
    </TouchableOpacity>
   )
 }
@@ -18,15 +20,20 @@ export default function ButtonComponent({label,imgSrc,imageStyle, _onPress,...re
 const styles = StyleSheet.create({
     defaultButton:{
         backgroundColor:colors.purple,
-        width:70,
-        height:30,
+        width:vw(200),
+        height:vh(50),
         justifyContent:'center',
         alignItems:'center',
-        borderRadius:5,
+        borderRadius:vw(10),
         overflow:'hidden',
+        alignSelf:'center',
+        position:'absolute',
+        bottom:vh(30)
+
+        
     },
     defaultText:{
-        color:'black',
+        color:colors.white,
         fontSize:30,
         fontWeight:'500',
     },

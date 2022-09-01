@@ -17,7 +17,9 @@ import {screenNames, strings} from '../utils/locale/strings';
 import HomeHeader from './routeHeaders/homeHeader';
 import Profile from '../modules/profile/screens';
 import SafeAreaComponent from '../components/safeAreaComponent';
-import ButtonComponent from '../components/buttonComponent';
+import Splash from '../modules/splash';
+
+
 
 const MainStack = createNativeStackNavigator();
 const TopTab = createMaterialTopTabNavigator();
@@ -34,7 +36,14 @@ const Route = () => {
   return (
     <SafeAreaComponent style={{flex: 1}} child={
       <NavigationContainer theme={DarkTheme}>
-      <MainStack.Navigator screenOptions={{headerShown: true}}>
+      <MainStack.Navigator screenOptions={{headerShown: true}} initialRouteName={screenNames.splash}>
+
+      <MainStack.Screen
+          name={screenNames.splash}
+          component={Splash}
+          // options={authStackOptions}
+        />
+
         <MainStack.Screen
           name={screenNames.authStack}
           component={AuthStack}

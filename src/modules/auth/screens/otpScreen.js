@@ -1,124 +1,98 @@
 import React, {useState} from 'react';
-import {StyleSheet} from 'react-native';
-import {CommonActions} from '@react-navigation/native';
-
-import TextInputComponent from '../../../components/textInput';
-import ButtonComponent from '../../../components/buttonComponent';
-
+import {ImageBackground, KeyboardAvoidingView} from 'react-native'
 import ActivityIndicatorComponent from '../../../components/activityIndicator';
-import {useDispatch} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import {uid} from '../../../reducer/rootReducer';
-import {vh, vw} from '../../../utils/dimensions';
 import ImageComponent from '../../../components/imageComponent';
 import images from '../../../utils/locale/images';
 import ViewComponent from '../../../components/viewComponent';
-import { keyboardTypeStrings, screenNames } from '../../../utils/locale/strings';
-import colors from '../../../utils/locale/colors';
-import { otpVerification } from '../../../utils/commonFunctions';
-
+import {keyboardTypeStrings, screenNames} from '../../../utils/locale/strings';
+import {
+  fireStoreFunctions,
+  otpVerification,
+  snackbarFunction,
+} from '../../../utils/commonFunctions';
+import OTPInputView from '@twotalltotems/react-native-otp-input';
+import {styles} from './styles';
+import auth from '@react-native-firebase/auth';
 
 export default function Otp({route, navigation}) {
-  const { phone, confirmation} = route.params;
-  const [otp, setOtp] = useState(null);
-  const [activityIndicator, setActivityIndicator] = useState(false);
-  const dispatch = useDispatch()
+  const {phone, confirmation} = route.params;
 
-  const callbackFunc = input => {
-    setOtp(input);
+  const [activityIndicator, setActivityIndicator] = useState(false);
+  const {uidString} = useSelector(store=>store.persistedReducer)
+
+  const dispatch = useDispatch();
+
+  const successCallback = docId => {
+    setActivityIndicator(false);
+    dispatch(uid(docId));
+    
+    
+    navigation.reset({
+      index: 0,
+      routes: [{name: screenNames.profile}],
+    });
+    setActivityIndicator(false);
   };
 
-  const successCallback=(docId)=>{
-    dispatch(uid(docId));
-            navigation.reset({
-              index: 0,
-              routes: [{name: screenNames.home}],
-            })
-        setActivityIndicator(false)
-  }
-
-  const failureCallback=(err)=>{
-    console.log('Error is', err)
+  const failureCallback = err => {
     setActivityIndicator(false);
+    snackbarFunction(err);
+  };
+
+  const updateUserData= ( phone)=>{
+    fireStoreFunctions.updateUserDetail(uidString,phone)
   }
 
-  const onPress = async () => {
+  
+
+  const onPress = async otp => {
     setActivityIndicator(true);
-   otpVerification(otp, phone,confirmation, successCallback, failureCallback)
-    
+    otpVerification(otp,confirmation,phone, successCallback, failureCallback)
   };
 
   return (
+
     <ViewComponent
       style={styles.mainView}
       child={
         <React.Fragment>
-          <ViewComponent
-            style={{
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginTop: vh(20),
-            }}
-            child={
-              <ImageComponent
-                imgSrc={images.chatIcon}
-                style={styles.imgStyle}
-              />
-            }
-          />
-
-          <ViewComponent
-            style={{justifyContent: 'center', alignItems: 'center'}}
-            child={
-              <React.Fragment>
-                <TextInputComponent
-                  styles={styles.otpInput}
-                  placeholder={'Enter OTP'}
-                  callbackFunc={callbackFunc}
-                  keyboardType={keyboardTypeStrings.numPad}
-                  maxLength={6}
+          <KeyboardAvoidingView>
+            <ViewComponent
+              style={styles.logoView}
+              child={
+                <ImageComponent
+                  imgSrc={images.splashImage}
+                  style={styles.chatImgStyle}
                 />
+              }
+            />
 
-                <ButtonComponent
-                  label={'CONFIRM'}
-                  _onPress={onPress}
-                  style={styles.buttonStyle}
-                  labelColor="white"
-                />
-              </React.Fragment>
-            }
-          />
+            <ViewComponent
+              style={styles.textInputAndButtonView}
+              child={
+                <React.Fragment>
+                  <OTPInputView
+                    pinCount={6}
+                    onCodeFilled={code => {
+                      onPress(code);
+                    }}
+                    autoFocusOnLoad={true}
+                    style={styles.otpInputView}
+                    codeInputFieldStyle={styles.otpCodeInput}
+                    selectionColor={'white'}
+                    keyboardType={keyboardTypeStrings.numPad}
+                  />
+                </React.Fragment>
+              }
+            />
 
-          <ActivityIndicatorComponent visible={activityIndicator} />
+            <ActivityIndicatorComponent visible={activityIndicator} />
+          </KeyboardAvoidingView>
         </React.Fragment>
       }
     />
+
   );
 }
-
-const styles = StyleSheet.create({
-  otpInput: {
-    borderWidth: 1,
-    borderRadius: 20,
-    borderColor: '#FFFFFF',
-    alignSelf: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: vw(20),
-    color: '#FFFFFF',
-    fontSize: 20,
-    width: vw(249),
-    height: vh(54),
-    marginVertical: vh(20),
-  },
-  buttonStyle: {
-    borderRadius: 20,
-    height: vh(54),
-    width: vw(249),
-    marginTop: 10,
-  },
-  mainView: {
-    flex: 1,
-  },
-  imgStyle: {
-    tintColor: colors.purple,
-  },
-});

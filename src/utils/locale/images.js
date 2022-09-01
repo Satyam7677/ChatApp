@@ -8,6 +8,7 @@ const images = {
     info:require(`${defaultPath}info.png`),
     call:require(`${defaultPath}call.png`),
     videoCall:require(`${defaultPath}camcorder.png`),
-    back:require(`${defaultPath}arrow.png`)
+    back:require(`${defaultPath}arrow.png`),
+    splashImage:require(`${defaultPath}slashImage.jpeg`),
 }
 export default images

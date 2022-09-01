@@ -1,62 +1,49 @@
-import {StyleSheet, TouchableOpacity, FlatList, AppState} from 'react-native';
-import React, {useEffect, useLayoutEffect, useState, useRef} from 'react';
+import {TouchableOpacity, FlatList, AppState} from 'react-native';
+import React, {
+  useEffect,
+  useLayoutEffect,
+  useState,
+  useRef,
+  useMemo,
+} from 'react';
 import ButtonComponent from '../../../components/buttonComponent';
-import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
-import {recentUserReducer, blockReducer} from '../../../reducer/rootReducer';
+import {recentUserReducer} from '../../../reducer/rootReducer';
 import {useDispatch, useSelector} from 'react-redux';
 import colors from '../../../utils/locale/colors';
 import ImageComponent from '../../../components/imageComponent';
 import images from '../../../utils/locale/images';
-import {vh, vw} from '../../../utils/dimensions';
 import TextComponent from '../../../components/textComponent';
 import SafeAreaComponent from '../../../components/safeAreaComponent';
 import ViewComponent from '../../../components/viewComponent';
+import {fireStoreFunctions} from '../../../utils/commonFunctions';
+import {styles} from './styles';
 
 // import { NavigationActions, StackActions } from 'react-navigation';
 
 export default function RecentChats({navigation}) {
-  const [activityIndicator, setActivityIndicator] = useState(false);
-  const [userModalVisible, setUserModalVisble] = useState(false);
   const appState = useRef(AppState.currentState);
   const [appStateVisible, setAppStateVisible] = useState(appState.current);
 
   const dispatch = useDispatch();
-  const {uidString, recentUsers, blockList} = useSelector(
-    store => store.persistedReducer,
-  );
+  const {uidString, recentUsers} = useSelector(store => store.persistedReducer);
 
   useEffect(() => {
-    firestore()
-      .collection('Users')
-      .doc(uidString)
-      .collection('BlockList')
-      .get()
-      .then(res => {
-        console.log('Response after getting blockList', res);
-        const blockArray = res.docs.map(x => x.data().isBlocked);
-        console.log('BlockArray is', blockArray);
-        // dispatch(blockReducer)
-      })
-      .catch(err => {
-        console.log('Error in getting blockList', err);
-      });
-
-    const subscriber = firestore()
-      .collection('RecentChats')
-      .doc(uidString)
-      .collection('RecentUsers')
-      .onSnapshot(x => {
-        dispatch(recentUserReducer(x.docs));
-      });
-    return () => subscriber();
+    const subscriber = fireStoreFunctions.checkRecentInbox(
+      uidString,
+      'RecentUsers',
+      snapShotCallBack,
+    );
+    return subscriber;
   }, []);
+
+  const snapShotCallBack = data => {
+    dispatch(recentUserReducer(data));
+  };
 
   useEffect(() => {
     userOnlineUpdate();
     const subscription = AppState.addEventListener('change', nextAppState => {
       appState.current = nextAppState;
-      console.log('App has come to the foreground!');
       userOnlineUpdate();
     });
 
@@ -66,64 +53,58 @@ export default function RecentChats({navigation}) {
   }, []);
 
   const userOnlineUpdate = () => {
-    setAppStateVisible(appState.current);
-    console.log('AppState', appState.current);
-    firestore().collection('Users').doc(uidString).update({
-      online: appState.current,
-    });
+    const currrentState = appState.current;
+   const cState= currrentState=='active'?'online':`last seen at ${new Date().getHours()} : ${new Date().getMinutes()}`
+
+    setAppStateVisible(cState);
+    fireStoreFunctions.updateOnlineState(uidString, cState);
   };
 
-  useLayoutEffect(() => {
-    firestore()
-      .collection('RecentChats')
-      .doc(uidString)
-      .collection('RecentUsers')
-      .get()
-      .then(res => {
-        dispatch(recentUserReducer(res.docs));
-      })
-      .catch(err => {
-        console.log('The error is ', err);
-      });
-  }, [uidString]);
-
   const _renderItem = ({item}) => {
-    console.log('ITEMs are', item);
-    const lastMsgDate=new Date(item.data().lastMessageAt).toJSON()
+    const lastMsgDate = new Date(item.data().createdAt).toJSON();
+    const id = item?.data()?.id;
+    const name = item?.data()?.name;
+    const lastMessage = item?.data()?.lastMessage;
+    const phone = item?.data()?.phone;
 
     return (
       <React.Fragment>
-        {item.data().id != uidString && (
-          <TouchableOpacity
-            style={styles.renderItem}
-            onPress={() => {
-              _userItemPress(item.data().id, item.data().phone);
-            }}>
-            <ImageComponent style={styles.imageStyle} />
+        <TouchableOpacity
+          style={styles.renderItem}
+          onPress={() => {
+            _userItemPress(id,  phone,name);
+          }}>
+          <ImageComponent style={styles.imageStyle} />
 
-            <ViewComponent
-            style={{flexDirection:'row'}}
-              child={
-                <React.Fragment>
-                  <ViewComponent child={
-                      <React.Fragment>
-                      <TextComponent
-                        style={{color: colors.white}}
-                        text={item.data().phone}
-                      />
-                      <TextComponent
-                        style={{color: 'white'}}
-                        text={item.data()?.lastMessage}
-                      />
-                      </React.Fragment>
-                  } />
-                  
-                  <TextComponent style={{color:'white'}} text={`${lastMsgDate}`}/>
-                </React.Fragment>
-              }
-            />
-          </TouchableOpacity>
-        )}
+          <ViewComponent
+            style={styles.recentChatinfo}
+            child={
+              <React.Fragment>
+                <ViewComponent
+                  style={styles.nameTimeView}
+                  child={
+                    <React.Fragment>
+                      <TextComponent style={styles.name} text={name} />
+
+                      {/* <TextComponent
+                        numberOfLines={1}
+                        style={styles.time}
+                        text={lastMsgDate}
+                      /> */}
+                    </React.Fragment>
+                  }
+                />
+
+                <TextComponent
+                  numberOfLines={1}
+                  ellipsizeMode={'tail'}
+                  style={styles.lastMessageText}
+                  text={lastMessage}
+                />
+              </React.Fragment>
+            }
+          />
+        </TouchableOpacity>
       </React.Fragment>
     );
   };
@@ -132,10 +113,22 @@ export default function RecentChats({navigation}) {
     navigation.push('contactList');
   };
 
-  const _userItemPress = (userId, phoneNum) => {
+  const _userItemPress = (userId,phoneNum, name ) => {
+    console.log('userId,phoneNum, name ',userId,phoneNum, name )
     const roomId = userId < uidString ? userId + uidString : uidString + userId;
-    navigation.navigate('chatRoom', {roomId, userId, phoneNum});
+    navigation.navigate('chatRoom', {roomId, userId,phoneNum, name});
   };
+
+  const button = useMemo(
+    () => (
+      <ButtonComponent
+        imgSrc={images.chatIcon}
+        _onPress={_contactPress}
+        style={styles.contactButton}
+      />
+    ),
+    [],
+  );
 
   return (
     <SafeAreaComponent
@@ -152,46 +145,9 @@ export default function RecentChats({navigation}) {
               />
             }
           />
-          <ButtonComponent
-            imgSrc={images.chatIcon}
-            _onPress={_contactPress}
-            style={styles.contactButton}
-          />
+          {button}
         </React.Fragment>
       }
     />
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    backgroundColor: colors.purple,
-    width: '50%',
-    height: '5%',
-    borderRadius: 10,
-    alignSelf: 'center',
-  },
-  mainView: {
-    flex: 1,
-  },
-  imageStyle: {
-    borderRadius: vw(50),
-    height: vh(50),
-    width: vw(50),
-    marginRight: vw(20),
-  },
-  renderItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: vh(10),
-    paddingHorizontal: vw(10),
-  },
-  contactButton: {
-    borderRadius: 50,
-    width: vw(50),
-    height: vw(50),
-    position: 'absolute',
-    right: vw(10),
-    bottom: vh(50),
-  },
-});

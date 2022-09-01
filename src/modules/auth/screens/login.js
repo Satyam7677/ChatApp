@@ -1,19 +1,16 @@
 import React, {useEffect, useState} from 'react';
 
-import {StyleSheet, Text, View, TouchableOpacity} from 'react-native';
+import {StyleSheet, Text, View, TouchableOpacity, ImageBackground} from 'react-native';
 
 import TextInputComponent from '../../../components/textInput';
 import ButtonComponent from '../../../components/buttonComponent';
-import {useDispatch, useSelector} from 'react-redux';
-import {CommonActions} from '@react-navigation/native';
-import Snackbar from 'react-native-snackbar';
-import {vh, vw} from '../../../utils/dimensions';
+import {useSelector} from 'react-redux';
 import KeyboardAvoidingView from 'react-native/Libraries/Components/Keyboard/KeyboardAvoidingView';
 import ImageComponent from '../../../components/imageComponent';
 import images from '../../../utils/locale/images';
 import ActivityIndicatorComponent from '../../../components/activityIndicator';
 import ViewComponent from '../../../components/viewComponent';
-import firestore from '@react-native-firebase/firestore';
+import {styles} from './styles';
 
 import {
   keyboardTypeStrings,
@@ -21,38 +18,32 @@ import {
   strings,
 } from '../../../utils/locale/strings';
 import colors from '../../../utils/locale/colors';
-import { uid } from '../../../reducer/rootReducer';
-import { signInWithPhoneNumber } from '../../../utils/commonFunctions';
-
-
+import {
+  signInWithPhoneNumber,
+  snackbarFunction,
+} from '../../../utils/commonFunctions';
+import TextComponent from '../../../components/textComponent';
+import { vw } from '../../../utils/dimensions';
 
 export default function Login({navigation}) {
-  
   const {uidString} = useSelector(store => store.persistedReducer);
   const [phone, setPhone] = useState(null);
   const [activityIndicator, setActivityIndicator] = useState(false);
 
-  useEffect(() => {
-    if (uidString) {
-        navigation.reset({
-          index: 0,
-          routes: [{name: screenNames.home}],
-        })
-  }
-}, []);
 
-  const successCallback=(confirmation)=>{
-    setActivityIndicator(false)
-    navigation.navigate(screenNames.otp, { phone,confirmation});
-  }
+  const successCallback = confirmation => {
+    setActivityIndicator(false);
+    navigation.navigate(screenNames.otp, {phone, confirmation});
+  };
 
-  const failureCallback=()=>{
-    setActivityIndicator(false)
-  }
+  const failureCallback = error => {
+    setActivityIndicator(false);
+    snackbarFunction(error);
+  };
 
   const _onPress = async () => {
     setActivityIndicator(true);
-    signInWithPhoneNumber(phone, successCallback, failureCallback)
+    signInWithPhoneNumber(phone, successCallback, failureCallback);
   };
 
   const callbackFunc = text => {
@@ -60,26 +51,24 @@ export default function Login({navigation}) {
   };
 
   return (
+
     <ViewComponent
       style={styles.mainView}
       child={
         <KeyboardAvoidingView>
           <ViewComponent
-            style={{
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginTop: vh(20),
-            }}
+            style={styles.logoView}
             child={
               <ImageComponent
-                imgSrc={images.chatIcon}
-                style={styles.imgStyle}
+                imgSrc={images.splashImage}
+                style={styles.chatImgStyle}
               />
             }
           />
 
+
           <ViewComponent
-            style={{justifyContent: 'center', alignItems: 'center'}}
+            style={styles.textInputAndButtonView}
             child={
               <React.Fragment>
                 <TextInputComponent
@@ -94,7 +83,6 @@ export default function Login({navigation}) {
                   label={strings.submit}
                   _onPress={_onPress}
                   style={styles.buttonStyle}
-                  labelColor={colors.white}
                 />
               </React.Fragment>
             }
@@ -103,35 +91,6 @@ export default function Login({navigation}) {
         </KeyboardAvoidingView>
       }
     />
+
   );
 }
-
-const styles = StyleSheet.create({
-  textInputStyle: {
-    borderWidth: 1,
-    borderRadius: 20,
-    borderColor: '#FFFFFF',
-    alignSelf: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: vw(20),
-    color: '#FFFFFF',
-    fontSize: 20,
-    width: vw(249),
-    height: vh(54),
-    marginVertical: vh(20),
-  },
-  buttonStyle: {
-    alignSelf: 'center',
-    height: vh(44),
-    width: vw(159),
-    borderRadius: 20,
-  },
-  mainView: {
-    flex: 1,
-  },
-  imgStyle: {
-    tintColor: colors.purple,
-    height:vh(100),
-    width:vw(100)
-  },
-});

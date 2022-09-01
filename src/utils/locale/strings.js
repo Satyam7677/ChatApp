@@ -8,7 +8,8 @@ const screenNames = {
     calls:'calls',
     profile:'profile',
     login:'login',
-    otp:'otp'
+    otp:'otp',
+    splash:'splash'
 
 
 }
@@ -22,7 +23,12 @@ const strings = {
     signOut:'Sign Out',
     settings:'Settings',
     submit:'SUBMIT',
-    enterPhoneNumber:'Enter Phone Number'
+    enterPhoneNumber:'Enter Phone Number',
+    active:'active',
+    online:'online',
+    offline:'offline'
+
+
 }
 
 const keyboardTypeStrings={

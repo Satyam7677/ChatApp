@@ -13,6 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import { uid } from '../../reducer/rootReducer';
 import { signOut } from '../../utils/commonFunctions';
+import ActivityIndicatorComponent from '../../components/activityIndicator';
 
 
 
@@ -29,12 +30,12 @@ const HomeHeader = () => {
 
 
   const signOutPress = () => {
+    onClose()
     setActivityIndicator(true);
     signOut(successCallback, failureCallback)
   };
 
   const successCallback=()=>{
-    
     setActivityIndicator(false);
     dispatch(uid(null))
       navigation.reset({
@@ -44,12 +45,9 @@ const HomeHeader = () => {
   }
 
   const failureCallback=(code)=>{
-    console.log('Error in signOut is', code)
+    console.log('Signout Failure', code)
     setActivityIndicator(false);
   }
-
-
-
 
   const onClose = () => {
     setOptionsVisible(false);
@@ -64,31 +62,38 @@ const HomeHeader = () => {
             <ImageComponent imgSrc={images.options} style={styles.imageStyle} />
           </TouchableOpacity>
           <Tooltip
+            backgroundStyle={{backgroundColor:'transparent' }}
             isVisible={optionsVisible}
             placement={strings.right}
             content={
-              <React.Fragment>
+              <ViewComponent style={styles.toolTipMainView} child={
+                <React.Fragment>
                 <TouchableOpacity onPress={signOutPress}>
-                  <TextComponent text={strings.signOut} />
-                </TouchableOpacity>
+                <TextComponent style={{color:'white'}} text={strings.signOut} />
+              </TouchableOpacity>
 
-                <TouchableOpacity onPress={()=>{
-                  setOptionsVisible(false)
-                  navigation.navigate(screenNames.profile)
-                }}>
-                  <TextComponent text={'Profile'} style={{color:'black'}} />
-                </TouchableOpacity>
-                
-                <TouchableOpacity onPress={signOut}>
-                  <TextComponent text={strings.settings} />
-                </TouchableOpacity>
+              <TouchableOpacity onPress={()=>{
+                setOptionsVisible(false)
+                navigation.navigate(screenNames.profile)
+              }}>
+                <TextComponent text={'Profile'} style={{color:'white'}} />
+              </TouchableOpacity>
+              
+              <TouchableOpacity onPress={signOut}>
+                <TextComponent style={{color:'white'}} text={strings.settings} />
+              </TouchableOpacity>
 
+             
+              
+            </React.Fragment>
+
+              }/>
                
-                
-              </React.Fragment>
             }
             onClose={onClose}
+            contentStyle={{backgroundColor:'transparent'}}
             tooltipStyle={styles.tooltipStyle}/>
+            <ActivityIndicatorComponent visible={activityIndicator} />
         </React.Fragment>
       }
     />
@@ -109,11 +114,16 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: vw(200),
     height: vh(200),
-    top: vh(70),
-    backgroundColor: 'white',
+    top: vh(50),
     padding: vw(20),
+    borderWidth:1,
+    backgroundColor:'#0F0F0F'
   },
   imageStyle: {height: vh(20), width: vw(20)},
+  toolTipMainView:{
+    justifyContent:'space-between', 
+    height:'100%'
+  }
 });
 
 export default HomeHeader;
