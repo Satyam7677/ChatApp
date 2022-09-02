@@ -14,7 +14,6 @@ const otpVerification=async (otp, confirmation,phone, successCallBack,failureCal
 
     const data =await firestore().collection('Users').doc(uidString).get()
 
-    console.log('DAAAATTTTTTAAAA', data.data())
     if(data.data()!=undefined)
     {firestore().collection('Users').doc(uidString).update(
       {
@@ -147,8 +146,9 @@ const fireStoreFunctions = {
       .set(content);
   },
 
-  typingFunction: (bool, collectionRoom, roomId, uid, docName) => {
-    firestore()
+  typingFunction: (bool, collectionRoom, roomId, uid, docName, notBlocked) => {
+    if(notBlocked==true)
+   { firestore()
       .collection(collectionRoom)
       .doc(roomId)
       .collection(uid)
@@ -156,6 +156,7 @@ const fireStoreFunctions = {
       .set({
         isTyping: bool,
       });
+    }
   },
 
   getUserData: (uid, successCallback, failureCallback) => {
@@ -233,7 +234,8 @@ const fireStoreFunctions = {
   },
 
   typingListener: (roomId, userId, callback) => {
-    firestore()
+   
+      firestore()
       .collection('ChatRooms')
       .doc(roomId)
       .collection(userId)
@@ -250,25 +252,20 @@ const fireStoreFunctions = {
         onlineCallback(snapshot.data().online);
       });
   },
-  blockUser: (uid, blockArray, successCallBack) => {
-    firestore().collection('Users').doc(uid).update(
+  blockUser: (uid,userId, successCallBack) => {
+    firestore().collection('Users').doc(uid).collection('BlockList').doc(userId).set(
       {
 
-        blockList:blockArray
+        blocked:true,
+        id:userId
       }
     ).then(()=>{
       successCallBack()
     })
   },
 
-  unblockUser: (userId, blockArray, successCallBack) => {
-    firestore()
-      .collection('Users')
-      .doc(userId).update({
-        blockList:blockArray
-      }).then(
-        ()=>successCallBack()
-      )
+  unblockUser: (uid,userId) => {
+    firestore().collection('Users').doc(uid).collection('BlockList').doc(userId).delete()
     },
       
 
@@ -281,7 +278,7 @@ const fireStoreFunctions = {
     const batch = firestore().batch();
 
     msgQuerySnapShot.forEach(documentSnapshot => {
-      if (documentSnapshot?.data().user?._id != uid)
+      if (documentSnapshot?.data().user?._id != uid && documentSnapshot?.data().deletedBy != uid)
         batch.update(documentSnapshot.ref, {received: true});
     });
 
@@ -328,9 +325,10 @@ const fireStoreFunctions = {
       });
   },
   blockListener:(userId, successCallBack)=>{
-    firestore().collection('Users').doc(userId).onSnapshot(
+    firestore().collection('Users').doc(userId).collection('BlockList').onSnapshot(
       documentSnapshot=>{
-        successCallBack(documentSnapshot?.data(userId)?.blockList)
+        const blockArray=documentSnapshot.docs.map(ele=>ele.data().id)
+        successCallBack(blockArray)
       }
     )
   }

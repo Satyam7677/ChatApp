@@ -4,7 +4,6 @@ import {blockReducer, userListReducer} from '../../../reducer/rootReducer';
 import {useDispatch, useSelector} from 'react-redux';
 import colors from '../../../utils/locale/colors';
 import ImageComponent from '../../../components/imageComponent';
-import {vh, vw} from '../../../utils/dimensions';
 import TextComponent from '../../../components/textComponent';
 import SafeAreaComponent from '../../../components/safeAreaComponent';
 import ViewComponent from '../../../components/viewComponent';
@@ -18,7 +17,7 @@ export default function ContactList({navigation}) {
 
   useEffect(() => {
     const subscriber = fireStoreFunctions.checkAllUsers(checkAllUsersSnapShot);
-    return () => subscriber();
+    return subscriber;
   }, []);
 
   const checkAllUsersSnapShot = data => {

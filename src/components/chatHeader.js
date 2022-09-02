@@ -15,6 +15,7 @@ export default function ChatHeader({
   uid,
   backCallback,
   toolTipCallback,
+  blockIndex
 }) {
   const [online, setOnline] = useState(null);
   useEffect(() => {
@@ -26,13 +27,6 @@ export default function ChatHeader({
     setOnline(bool);
   };
 
-  // const blockUser = () => {
-  //   fireStoreFunctions.blockUser(uid, id, true);
-  // };
-
-  // const unBlockUser = () => {
-  //   fireStoreFunctions.unblockUser(uid, id);
-  // };
 
   return (
     <ViewComponent
@@ -47,7 +41,7 @@ export default function ChatHeader({
             child={
               <React.Fragment>
                 <TextComponent style={styles.head} text={`${head} `} />
-                <TextComponent
+               {blockIndex==-1 && <TextComponent
                   style={[
                     {color: online == 'online' ? 'green' : 'grey'},
                     styles.onlineText,
@@ -55,7 +49,7 @@ export default function ChatHeader({
                   text={
                     online
                   }
-                />
+                />}
               </React.Fragment>
             }
           />

@@ -10,7 +10,8 @@ import colors from '../../../utils/locale/colors';
 import Tooltip from 'react-native-walkthrough-tooltip';
 import TextComponent from '../../../components/textComponent';
 import ViewComponent from '../../../components/viewComponent';
-import { userDataReducer } from '../../../reducer/rootReducer';
+import { blockReducer, userDataReducer, senderBlockReducer } from '../../../reducer/rootReducer';
+
 
 export default function ChatRoom({route, navigation}) {
   const {roomId, userId, phoneNum, name} = route.params;
@@ -20,13 +21,13 @@ export default function ChatRoom({route, navigation}) {
   const [typing, setTyping] = useState(false);
   const [timer, setTimer] = useState(null);
   const [optionsVisible, setOptionsVisible] = useState(false);
-  // const {recieverBlockList} = useSelector(store=>store.persistedReducer)
+  const {recieverBlockList} = useSelector(store=>store.persistedReducer)
+  const {senderBlockList} = useSelector(store=>store.persistedReducer)
   const dispatch = useDispatch()
 
   useLayoutEffect(() => {
-
-    // const blockListener=fireStoreFunctions.blockListener(userId, checkBlockSuccessCallback)
-    
+    const blockListener=fireStoreFunctions.blockListener(userId, checkBlockSuccessCallback)
+    const sameUserBlockLstener = fireStoreFunctions.blockListener(uidString, checkSameUserBlockSuccessCallback)
     const subscriber = fireStoreFunctions.roomListener(
       roomId,
       setMessageArrayCallback,
@@ -40,32 +41,33 @@ export default function ChatRoom({route, navigation}) {
     );
 
     return () => {
-
+      sameUserBlockLstener
+      blockListener,
       subscriber;
       typingListener;
-
       setMessageArray(null)
     };
   }, []);
 
-  // const checkBlockSuccessCallback=(data)=>{
-  //   dispatch(blockReducer(data))
+  const checkSameUserBlockSuccessCallback = (data)=>{
+    dispatch(senderBlockReducer(data))
+  }
 
-  // }
+  const checkBlockSuccessCallback=(data)=>{
+    dispatch(blockReducer(data))
+  }
 
   useEffect(()=>{
+    if((blockIndex==-1  && senderBlockIndex==-1)==true)
     fireStoreFunctions.chatRecieved(roomId, uidString)
   },[messageArray])
 
-  // const {blockList} =userData
+   const blockIndex = recieverBlockList?.findIndex(e=>e===uidString)
+    const senderBlockIndex= senderBlockList?.findIndex(e=>e==userId)
 
   const setTypingCallback = typing => {
     setTyping(typing);
   };
-
-
-    // const userIndex= blockList?.findIndex(e=>e==userId)
-    // const recieverIndex= recieverBlockList?.findIndex(e=>e==uidString)
   
   
 
@@ -81,7 +83,8 @@ export default function ChatRoom({route, navigation}) {
   
 
   const onSend = (message = []) => {
-
+    if(blockIndex==-1 && senderBlockIndex == -1)
+    { 
     const msg = {
       _id: message[0]._id,
       text: text,
@@ -99,6 +102,7 @@ export default function ChatRoom({route, navigation}) {
     };
 
     setMessageArray(previousMessage => GiftedChat.append(previousMessage, msg));
+   
     fireStoreFunctions.addMessage(
       'ChatRooms',
       roomId,
@@ -140,6 +144,53 @@ export default function ChatRoom({route, navigation}) {
       uidString,
       recieverContent,
     );
+  }
+  else
+  {
+    const msg={
+      _id: message[0]._id,
+      text: text,
+      createdAt: new Date().getTime(),
+      reciever: {
+        _id: userId,
+        name,
+      },
+      user: {
+        _id: uidString,
+        name: userData?.name,
+      },
+      sent:true,
+      deletedBy:userId
+    }
+    setMessageArray(previousMessage => GiftedChat.append(previousMessage, msg));
+    fireStoreFunctions.addMessage(
+      'ChatRooms',
+      roomId,
+      'messages',
+      msg._id,
+      msg,
+    );
+
+    const userContent = {
+      id: userId,
+      phone: phoneNum,
+      name: name,
+      lastMessage: text,
+      lastMessageAt: new Date().getTime(),
+      roomId,
+    };
+
+    fireStoreFunctions.updateRecentChats(
+      'Inbox',
+      uidString,
+      'RecentUsers',
+      userId,
+      userContent,
+    );
+
+
+
+  }
     setText('');
   };
 
@@ -341,6 +392,8 @@ export default function ChatRoom({route, navigation}) {
         roomId,
         uidString,
         'CurrentStatus',
+        notBlocked=(blockIndex==-1  && senderBlockIndex==-1)
+        
       );
       clearTimeout(timer);
       const newTimer = setTimeout(() => {
@@ -350,6 +403,8 @@ export default function ChatRoom({route, navigation}) {
           roomId,
           uidString,
           'CurrentStatus',
+          notBlocked=(blockIndex==-1  && senderBlockIndex==-1)
+
         );
       }, 1500);
       setTimer(newTimer);
@@ -367,43 +422,38 @@ export default function ChatRoom({route, navigation}) {
   const clearChats = () => {
     setOptionsVisible(false);
     fireStoreFunctions.clearChats(roomId, uidString, userId)
-    
-    // fireStoreFunctions.resetRecentChat()
+    const userContent = {
+      id: userId,
+      phone: phoneNum,
+      name: name,
+      lastMessage: '',
+      lastMessageAt:'',
+      roomId,
+    };
+    fireStoreFunctions.updateRecentChats('Inbox',uidString,'RecentUsers',userId,userContent)
   };
 
   const blockUser=()=>{
 
     setOptionsVisible(false)
-  //   if(blockList?.length>0)
-  //   {
-  //     const nArray= blockList?.map(ele=>ele)
-  //     nArray.append(userId)
-  //   fireStoreFunctions.blockUser(uidString, nArray,blockSuccessCallback)
-  // }
-  // else
-  //  { const blockArray = [userId]
-  //   fireStoreFunctions.blockUser(uidString, blockArray, blockSuccessCallback)
-  // }
-    
+    fireStoreFunctions.blockUser(uidString,userId, blockSuccessCallback)
   }
 
-  // const unblockUser = ()=>{
-  //   setOptionsVisible(false)
-  //   const nArray= blockList?.map(ele=>ele)
-  //   nArray?.splice(userIndex,1)
-  //   fireStoreFunctions.unblockUser(uidString,nArray, blockSuccessCallback)
-  // }
+  const unblockUser = ()=>{
+    setOptionsVisible(false)
+    fireStoreFunctions.unblockUser(uidString, userId)
+  }
 
-  // const blockSuccessCallback=()=>{
-  //   fireStoreFunctions.getUserData(uidString,getDataSuccessCallback, getDataFailureCallback)
-  // }
-  // const getDataSuccessCallback=(data)=>{
-  //   dispatch(userDataReducer(data))
-  // }
+  const blockSuccessCallback=()=>{
+    // fireStoreFunctions.getUserData(uidString,getDataSuccessCallback, getDataFailureCallback)
+  }
+  const getDataSuccessCallback=(data)=>{
+    dispatch(userDataReducer(data))
+  }
 
-  // const getDataFailureCallback=(err)=>{
-  //   console.log('Getting Data error',err)
-  // }
+  const getDataFailureCallback=(err)=>{
+    console.log('Getting Data error',err)
+  }
 
   return (
     <SafeAreaComponent
@@ -416,6 +466,7 @@ export default function ChatRoom({route, navigation}) {
             uid={uidString}
             backCallback={onBackPress}
             toolTipCallback={toolTipCallback}
+            blockIndex = {blockIndex}
           />
           <GiftedChat
             isTyping={typing}
@@ -443,8 +494,8 @@ export default function ChatRoom({route, navigation}) {
                 <TouchableOpacity onPress={clearChats}>
                   <TextComponent style={{color:'white'}} text={'Clear Chats'} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={blockUser}>
-                  <TextComponent style={{color:'white'}} text={'block' }/>
+                <TouchableOpacity onPress={senderBlockIndex==-1?blockUser:unblockUser}>
+                  <TextComponent style={{color:'white'}} text={senderBlockIndex==-1?'block':'Unblock user' }/>
                 </TouchableOpacity>
               </React.Fragment>
               }
