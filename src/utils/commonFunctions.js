@@ -234,7 +234,6 @@ const fireStoreFunctions = {
   },
 
   typingListener: (roomId, userId, callback) => {
-   
       firestore()
       .collection('ChatRooms')
       .doc(roomId)

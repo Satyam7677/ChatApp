@@ -30,7 +30,7 @@ const chatRoomOptions = {title: strings.Chat_Room, headerShown: false,}
 const contactListOptions = {title: strings.Select_Contact, headerShadowVisible: true}
 const profileOptions = {title:strings.setProfile, headerShown:false}
 const homeComponentScreenOptions = {tabBarIndicatorStyle: {backgroundColor: colors.purple}}
-
+const splashOptions = {headerShown:false}
 const Route = () => {
 
   return (
@@ -41,6 +41,7 @@ const Route = () => {
       <MainStack.Screen
           name={screenNames.splash}
           component={Splash}
+          options = {splashOptions}
           // options={authStackOptions}
         />
 

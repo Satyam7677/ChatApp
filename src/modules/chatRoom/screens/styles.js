@@ -52,6 +52,7 @@ export const style = StyleSheet.create({
       position: 'absolute',
        top: vh(50),
       backgroundColor:colors.lightBlack,
+      width:vw(120)
 
     },
     toolTipView:{
