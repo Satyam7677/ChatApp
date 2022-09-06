@@ -47,6 +47,7 @@ export const styles = StyleSheet.create({
     time:{
       width:vw(100),
       color:colors.white
-    }
+    },
+    recentChatFlatListView:{height: '90%'}
     
   });

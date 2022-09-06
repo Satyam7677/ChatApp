@@ -1,7 +1,6 @@
 import {TouchableOpacity, FlatList, AppState} from 'react-native';
 import React, {
   useEffect,
-  useLayoutEffect,
   useState,
   useRef,
   useMemo,
@@ -136,7 +135,7 @@ export default function RecentChats({navigation}) {
       child={
         <React.Fragment>
           <ViewComponent
-            style={{height: '90%'}}
+            style={styles.recentChatFlatListView}
             child={
               <FlatList
                 data={recentUsers}

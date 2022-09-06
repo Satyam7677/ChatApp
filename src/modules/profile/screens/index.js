@@ -1,8 +1,7 @@
 import {Platform, Text, TouchableOpacity} from 'react-native';
-import React, {useEffect, useLayoutEffect, useState} from 'react';
+import React, {useLayoutEffect, useState} from 'react';
 import ImageComponent from '../../../components/imageComponent';
 import images from '../../../utils/locale/images';
-import {vh, vw} from '../../../utils/dimensions';
 import ButtonComponent from '../../../components/buttonComponent';
 import colors from '../../../utils/locale/colors';
 import ViewComponent from '../../../components/viewComponent';
@@ -35,10 +34,6 @@ export default function Profile() {
       userDataFailureCallback,
     );
   }, [toolTipVisible]);
-
-  // useEffect(()=>{
-
-  // },[])
 
   const userDataSuccessCallback = data => {
     dispatch(userDataReducer(data));
@@ -98,7 +93,7 @@ export default function Profile() {
         onClose={() => {
           setToolTipVisible(false);
         }}
-        contentStyle={{backgroundColor: 'transparent'}}
+        contentStyle={styles.tooltipContentStyle}
         tooltipStyle={styles.tooltipStyle}
       />
     );
@@ -132,21 +127,17 @@ export default function Profile() {
               style={styles.userImageStyle}
             />
             <ViewComponent
-              style={{
-                borderBottomColor: colors.grey,
-                width: '70%',
-                borderBottomWidth: 0.25,
-              }}
+              style={styles.nameView}
               child={
                 <React.Fragment>
-                  <TextComponent text={'Name'} style={{color: colors.grey}} />
+                  <TextComponent text={'Name'} style={styles.nameText} />
                   <TextComponent
                     text={userData?.name}
-                    style={{color: colors.white, textWeight: '100'}}
+                    style={styles.userInput}
                   />
                   <TextComponent
                     text={'This username is visible to other users'}
-                    style={{color: colors.grey}}
+                    style={styles.nameText}
                   />
                 </React.Fragment>
               }
@@ -163,17 +154,13 @@ export default function Profile() {
               style={styles.userImageStyle}
             />
             <ViewComponent
-              style={{
-                borderBottomColor: colors.grey,
-                width: '70%',
-                borderBottomWidth: 0.25,
-              }}
+              style={styles.aboutView}
               child={
                 <React.Fragment>
-                  <TextComponent text={'About'} style={{color: colors.grey}} />
+                  <TextComponent text={'About'} style={styles.nameText} />
                   <TextComponent
                     text={userData?.about}
-                    style={{color: colors.white, textWeight: '100'}}
+                    style={styles.userInput}
                   />
                 </React.Fragment>
               }
@@ -186,14 +173,10 @@ export default function Profile() {
               style={styles.userImageStyle}
             />
             <ViewComponent
-              style={{
-                borderBottomColor: colors.grey,
-                width: '70%',
-                // borderBottomWidth: 0.25,
-              }}
+              style={styles.phoneView}
               child={
                 <React.Fragment>
-                  <TextComponent text={'Phone'} style={{color: colors.grey}} />
+                  <TextComponent text={'Phone'} style={styles.nameText} />
                   <TextComponent
                     text={`+91${userData?.phone}`}
                     style={{color: colors.white, textWeight: '100'}}

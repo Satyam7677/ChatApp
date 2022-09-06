@@ -62,25 +62,25 @@ const HomeHeader = () => {
             <ImageComponent imgSrc={images.options} style={styles.imageStyle} />
           </TouchableOpacity>
           <Tooltip
-            backgroundStyle={{backgroundColor:'transparent' }}
+            backgroundStyle={styles.tooltipBackground}
             isVisible={optionsVisible}
             placement={strings.right}
             content={
               <ViewComponent style={styles.toolTipMainView} child={
                 <React.Fragment>
                 <TouchableOpacity onPress={signOutPress}>
-                <TextComponent style={{color:'white'}} text={strings.signOut} />
+                <TextComponent style={styles.textStyle} text={strings.signOut} />
               </TouchableOpacity>
 
               <TouchableOpacity onPress={()=>{
                 setOptionsVisible(false)
                 navigation.navigate(screenNames.profile)
               }}>
-                <TextComponent text={'Profile'} style={{color:'white'}} />
+                <TextComponent text={'Profile'} style={styles.textStyle} />
               </TouchableOpacity>
               
               <TouchableOpacity onPress={signOut}>
-                <TextComponent style={{color:'white'}} text={strings.settings} />
+                <TextComponent style={styles.textStyle} text={strings.settings} />
               </TouchableOpacity>
 
              
@@ -123,7 +123,9 @@ const styles = StyleSheet.create({
   toolTipMainView:{
     justifyContent:'space-between', 
     height:'100%'
-  }
+  }, 
+  textStyle:{color:'white'},
+  tooltipBackground:{backgroundColor:'transparent' }
 });
 
 export default HomeHeader;

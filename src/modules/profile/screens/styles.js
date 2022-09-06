@@ -64,6 +64,24 @@ import colors from "../../../utils/locale/colors";
         okButtonPress:{
           backgroundColor:'#006FA2',
           elevation: 24,
+        },
+        tooltipContentStyle:{backgroundColor: 'transparent'},
+        nameText:{color: colors.grey}, 
+        nameView:{
+          borderBottomColor: colors.grey,
+          width: '70%',
+          borderBottomWidth: 0.25,
+        },
+        aboutView:{
+          borderBottomColor: colors.grey,
+          width: '70%',
+          borderBottomWidth: 0.25,
+        },
+        userInput:{color: colors.white, textWeight: '100'},
+        phoneView:{
+          borderBottomColor: colors.grey,
+          width: '70%',
+          // borderBottomWidth: 0.25,
         }
       });
       

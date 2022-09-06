@@ -404,7 +404,6 @@ export default function ChatRoom({route, navigation}) {
           uidString,
           'CurrentStatus',
           notBlocked=(blockIndex==-1  && senderBlockIndex==-1)
-
         );
       }, 1500);
       setTimer(newTimer);
@@ -457,7 +456,7 @@ export default function ChatRoom({route, navigation}) {
 
   return (
     <SafeAreaComponent
-      style={{flex: 1}}
+      style={style.mainView}
       child={
         <React.Fragment>
           <ChatHeader
@@ -486,16 +485,16 @@ export default function ChatRoom({route, navigation}) {
             tooltipStyle={style.tooltipStyle}
             topAdjustment={10}
             onClose={closeOptions}
-            contentStyle={{backgroundColor:'transparent', justifyContent:'space-between'}}
+            contentStyle={style.tooltipContentStyle}
             isVisible={optionsVisible}
             content={
               <ViewComponent style={style.toolTipView} child={
               <React.Fragment>
                 <TouchableOpacity onPress={clearChats}>
-                  <TextComponent style={{color:'white'}} text={'Clear Chats'} />
+                  <TextComponent style={style.textOptions} text={'Clear Chats'} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={senderBlockIndex==-1?blockUser:unblockUser}>
-                  <TextComponent style={{color:'white'}} text={senderBlockIndex==-1?'block':'Unblock user' }/>
+                  <TextComponent style={style.textOptions} text={senderBlockIndex==-1?'block':'Unblock user' }/>
                 </TouchableOpacity>
               </React.Fragment>
               }

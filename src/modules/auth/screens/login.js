@@ -1,6 +1,6 @@
-import React, {useEffect, useState} from 'react';
+import React, { useState} from 'react';
 
-import {StyleSheet, Text, View, TouchableOpacity, ImageBackground} from 'react-native';
+
 
 import TextInputComponent from '../../../components/textInput';
 import ButtonComponent from '../../../components/buttonComponent';
@@ -17,13 +17,13 @@ import {
   screenNames,
   strings,
 } from '../../../utils/locale/strings';
-import colors from '../../../utils/locale/colors';
+
 import {
   signInWithPhoneNumber,
   snackbarFunction,
 } from '../../../utils/commonFunctions';
-import TextComponent from '../../../components/textComponent';
-import { vw } from '../../../utils/dimensions';
+
+
 
 export default function Login({navigation}) {
   const {uidString} = useSelector(store => store.persistedReducer);

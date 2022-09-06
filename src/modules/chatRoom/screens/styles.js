@@ -15,18 +15,18 @@ export const style = StyleSheet.create({
     textInput: {
       backgroundColor: '#CAC9C9',
       flex: 1,
-      height: 40,
+      height: vh(40),
       borderRadius: 5,
       marginHorizontal: 10,
-      width: 250,
+      width: vw(250),
       fontSize: 20,
       paddingHorizontal: 10,
     },
     buttonStyle: {
       backgroundColor: 'green',
       justifyContent: 'center',
-      width: 100,
-      height: 40,
+      width: vw(100),
+      height: vh(40),
     },
     mainView: {
       flex: 1,
@@ -38,8 +38,8 @@ export const style = StyleSheet.create({
       borderRadius: 17,
       height: 'auto',
       alignItems: 'center',
-      minHeight: 40,
-      minWidth: 60,
+      minHeight: vh(40),
+      minWidth: vw(60),
       marginHorizontal: 2,
       paddingHorizontal: 10,
       paddingVertical: 10,
@@ -59,6 +59,11 @@ export const style = StyleSheet.create({
       justifyContent:'space-between',
       height:vh(60),
       
-    }
+    }, 
+    textOptions:{
+      color:'white'
+    },
+    tooltipContentStyle:{backgroundColor:'transparent', justifyContent:'space-between'}
+  
   });
   
