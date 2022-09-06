@@ -192,7 +192,7 @@ const fireStoreFunctions = {
       .collection('Users')
       .get()
       .then(res => {
-        successCallBack(res.docs);
+        successCallBack(res?.docs);
       })
       .catch(err => {
         failureCallback(err);
@@ -220,14 +220,14 @@ const fireStoreFunctions = {
           .get();
         const batch = firestore().batch();
         msgQuerySnapShot.forEach(documentSnapshot => {
-          if (documentSnapshot.data().reciever._id == userId)
-            batch.update(documentSnapshot.ref, {received: true});
+          if (documentSnapshot?.data()?.reciever._id == userId)
+            batch.update(documentSnapshot?.ref, {received: true});
         });
         const dataArray = documentSnapshot.docs.map(element => {
-          return element.data();
+          return element?.data();
         });
         dataArray.sort((a, b) => {
-          return b.createdAt - a.createdAt;
+          return b?.createdAt - a?.createdAt;
         });
         setMessageArrayCallback(dataArray);
       });
@@ -248,7 +248,7 @@ const fireStoreFunctions = {
       .collection('Users')
       .doc(id)
       .onSnapshot(snapshot => {
-        onlineCallback(snapshot.data().online);
+        onlineCallback(snapshot?.data()?.online);
       });
   },
   blockUser: (uid,userId, successCallBack) => {
@@ -277,8 +277,8 @@ const fireStoreFunctions = {
     const batch = firestore().batch();
 
     msgQuerySnapShot.forEach(documentSnapshot => {
-      if (documentSnapshot?.data().user?._id != uid && documentSnapshot?.data().deletedBy != uid)
-        batch.update(documentSnapshot.ref, {received: true});
+      if (documentSnapshot?.data()?.user?._id != uid && documentSnapshot?.data()?.deletedBy != uid)
+        batch.update(documentSnapshot?.ref, {received: true});
     });
 
     return batch.commit();
@@ -326,7 +326,7 @@ const fireStoreFunctions = {
   blockListener:(userId, successCallBack)=>{
     firestore().collection('Users').doc(userId).collection('BlockList').onSnapshot(
       documentSnapshot=>{
-        const blockArray=documentSnapshot.docs.map(ele=>ele.data().id)
+        const blockArray=documentSnapshot.docs.map(ele=>ele?.data()?.id)
         successCallBack(blockArray)
       }
     )
