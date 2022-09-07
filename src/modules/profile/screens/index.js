@@ -13,9 +13,10 @@ import {
   imagePickerFunction,
 } from '../../../utils/commonFunctions';
 import {userDataReducer} from '../../../reducer/rootReducer';
-import {useNavigation} from '@react-navigation/native';
-import { strings} from '../../../utils/locale/strings';
+import {useNavigation, useNavigationState} from '@react-navigation/native';
+import { screenNames, strings} from '../../../utils/locale/strings';
 import {styles} from './styles';
+
 
 export default function Profile() {
   const [img, setImg] = useState(null);
@@ -25,6 +26,7 @@ export default function Profile() {
   const [text, setText] = useState(null);
   const [toolTipFor, setToolTipFor] = useState(null);
   const navigation = useNavigation();
+  const routesLength = useNavigationState(state => state.routes.length);
 
   useLayoutEffect(() => {
     fireStoreFunctions.getUserData(
@@ -58,7 +60,11 @@ export default function Profile() {
   };
 
   const okButtonPress = () => {
-    navigation.popToTop();
+    console.log('routeLength', routesLength)
+    if(routesLength>1)
+    navigation.popToTop()
+    else
+    navigation.replace(screenNames.home)
   };
 
   const tooltip = () => {
