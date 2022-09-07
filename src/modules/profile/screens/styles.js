@@ -81,7 +81,12 @@ import colors from "../../../utils/locale/colors";
         phoneView:{
           borderBottomColor: colors.grey,
           width: '70%',
-          // borderBottomWidth: 0.25,
-        }
+          
+
+        },
+        tooltipView:{
+          alignItems:'center'
+        },
+        tooltipOk:{alignSelf:'center',marginTop:20}
       });
       

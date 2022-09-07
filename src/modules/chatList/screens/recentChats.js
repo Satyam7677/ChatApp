@@ -1,14 +1,8 @@
 import {TouchableOpacity, FlatList, AppState} from 'react-native';
-import React, {
-  useEffect,
-  useState,
-  useRef,
-  useMemo,
-} from 'react';
+import React, {useEffect, useState, useRef, useMemo} from 'react';
 import ButtonComponent from '../../../components/buttonComponent';
 import {recentUserReducer} from '../../../reducer/rootReducer';
 import {useDispatch, useSelector} from 'react-redux';
-import colors from '../../../utils/locale/colors';
 import ImageComponent from '../../../components/imageComponent';
 import images from '../../../utils/locale/images';
 import TextComponent from '../../../components/textComponent';
@@ -16,8 +10,8 @@ import SafeAreaComponent from '../../../components/safeAreaComponent';
 import ViewComponent from '../../../components/viewComponent';
 import {fireStoreFunctions} from '../../../utils/commonFunctions';
 import {styles} from './styles';
+import { screenNames, strings } from '../../../utils/locale/strings';
 
-// import { NavigationActions, StackActions } from 'react-navigation';
 
 export default function RecentChats({navigation}) {
   const appState = useRef(AppState.currentState);
@@ -41,7 +35,7 @@ export default function RecentChats({navigation}) {
 
   useEffect(() => {
     userOnlineUpdate();
-    const subscription = AppState.addEventListener('change', nextAppState => {
+    const subscription = AppState.addEventListener(strings.change, nextAppState => {
       appState.current = nextAppState;
       userOnlineUpdate();
     });
@@ -53,14 +47,15 @@ export default function RecentChats({navigation}) {
 
   const userOnlineUpdate = () => {
     const currrentState = appState.current;
-   const cState= currrentState=='active'?'online':`last seen at ${new Date().getHours()} : ${new Date().getMinutes()}`
-
+    const cState =
+      currrentState == strings.active
+        ? strings.online
+        : `last seen at ${new Date().getHours()} : ${new Date().getMinutes()}`;
     setAppStateVisible(cState);
     fireStoreFunctions.updateOnlineState(uidString, cState);
   };
 
   const _renderItem = ({item}) => {
-    const lastMsgDate = new Date(item.data().createdAt).toJSON();
     const id = item?.data()?.id;
     const name = item?.data()?.name;
     const lastMessage = item?.data()?.lastMessage;
@@ -71,7 +66,7 @@ export default function RecentChats({navigation}) {
         <TouchableOpacity
           style={styles.renderItem}
           onPress={() => {
-            _userItemPress(id,  phone,name);
+            _userItemPress(id, phone, name);
           }}>
           <ImageComponent style={styles.imageStyle} />
 
@@ -84,12 +79,6 @@ export default function RecentChats({navigation}) {
                   child={
                     <React.Fragment>
                       <TextComponent style={styles.name} text={name} />
-
-                      {/* <TextComponent
-                        numberOfLines={1}
-                        style={styles.time}
-                        text={lastMsgDate}
-                      /> */}
                     </React.Fragment>
                   }
                 />
@@ -109,13 +98,12 @@ export default function RecentChats({navigation}) {
   };
 
   const _contactPress = () => {
-    navigation.push('contactList');
+    navigation.push(screenNames.contactList);
   };
 
-  const _userItemPress = (userId,phoneNum, name ) => {
-    console.log('userId,phoneNum, name ',userId,phoneNum, name )
+  const _userItemPress = (userId, phoneNum, name) => {
     const roomId = userId < uidString ? userId + uidString : uidString + userId;
-    navigation.navigate('chatRoom', {roomId, userId,phoneNum, name});
+    navigation.navigate(strings.chatRoom, {roomId, userId, phoneNum, name});
   };
 
   const button = useMemo(

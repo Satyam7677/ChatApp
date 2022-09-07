@@ -1,6 +1,6 @@
-import {StyleSheet, TouchableOpacity, FlatList} from 'react-native';
+import {TouchableOpacity, FlatList} from 'react-native';
 import React, {useEffect, useLayoutEffect} from 'react';
-import {blockReducer, userListReducer} from '../../../reducer/rootReducer';
+import { userListReducer} from '../../../reducer/rootReducer';
 import {useDispatch, useSelector} from 'react-redux';
 import colors from '../../../utils/locale/colors';
 import ImageComponent from '../../../components/imageComponent';
@@ -8,12 +8,13 @@ import TextComponent from '../../../components/textComponent';
 import SafeAreaComponent from '../../../components/safeAreaComponent';
 import ViewComponent from '../../../components/viewComponent';
 import {fireStoreFunctions} from '../../../utils/commonFunctions';
-import { styles } from './styles';
+import {styles} from './styles';
+import { strings } from '../../../utils/locale/strings';
 
 export default function ContactList({navigation}) {
   const {userList} = useSelector(store => store.persistedReducer);
   const dispatch = useDispatch();
-  const {uidString, blockList} = useSelector(store => store.persistedReducer);
+  const {uidString} = useSelector(store => store.persistedReducer);
 
   useEffect(() => {
     const subscriber = fireStoreFunctions.checkAllUsers(checkAllUsersSnapShot);
@@ -35,21 +36,6 @@ export default function ContactList({navigation}) {
     dispatch(userListReducer(data));
   };
 
-  const blockSuccessCallback = blockedUser => {
-    console.log('Block success');
-    dispatch(blockReducer([...blockList, blockedUser]));
-  };
-
-  const blockFailureCallback = () => {};
-
-  const unblockSuccessCallback = ind => {
-    console.log('unblockSuccess', ind, blockList);
-    const x = blockList.splice(ind, 1);
-    console.log('After splice', blockList);
-    dispatch(blockReducer(blockList));
-  };
-
-  const unblockFailureCallback = () => {};
 
   const _renderItem = ({item}) => {
     const otherUserId = item.data().id;
@@ -64,41 +50,7 @@ export default function ContactList({navigation}) {
                 item.data().phone,
                 item?.data()?.name,
               );
-            }}
-
-            // onLongPress={()=>{
-            //   console.log('BlockList', blockList)
-            //   const ind = blockList.findIndex(element=>element==otherUserId)
-            //   if(ind!=-1)
-            //   {
-            //     firestore().collection('Users').doc(uidString).collection('BlockList').doc(otherUserId).delete().then(
-            //       (res)=>{
-            //         unblockSuccessCallback(ind)
-            //         // console.log('Response after block', res)
-            //       }
-            //     ).catch(
-            //       ()=>{
-            //         //unblockFailureCallback()
-
-            //       }
-            //     )
-            //   }
-            //   else
-            //   {
-            //     firestore().collection('Users').doc(uidString).collection('BlockList').doc(otherUserId).set({
-            //       isBlocked:true,
-            //       id:otherUserId
-            //     }).then(
-            //       (res)=>{
-            //         blockSuccessCallback(otherUserId)
-            //         // console.log('Response after unblock', res)
-            //       }
-            //     ).catch(()=>{
-            //       //  blockFailureCallback()
-            //     })
-            //   }
-            // }}
-          >
+            }}>
             <ImageComponent style={styles.imageStyle} />
             <ViewComponent
               child={
@@ -126,7 +78,7 @@ export default function ContactList({navigation}) {
 
   const _userItemPress = (userId, phoneNum, name) => {
     const roomId = userId < uidString ? userId + uidString : uidString + userId;
-    navigation.replace('chatRoom', {roomId, userId, phoneNum, name});
+    navigation.replace(strings.chatRoom, {roomId, userId, phoneNum, name});
   };
 
   return (
@@ -153,5 +105,3 @@ export default function ContactList({navigation}) {
 const getAllUserFailureCallback = err => {
   console.log('Error in getAllUser ', err);
 };
-
-

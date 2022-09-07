@@ -6,11 +6,11 @@ export const styles = StyleSheet.create({
   otpInput: {
     borderWidth: 1,
     borderRadius: 20,
-    borderColor: '#FFFFFF',
+    borderColor: colors.white,
     alignSelf: 'center',
     justifyContent: 'center',
     paddingHorizontal: vw(20),
-    color: '#FFFFFF',
+    color: colors.white,
     fontSize: 20,
     width: vw(249),
     height: vh(54),
@@ -20,14 +20,11 @@ export const styles = StyleSheet.create({
   mainView: {
     flex: 1,
   },
-//   chatImgStyle: {
-//     tintColor: colors.purple,
-//   },
 
   textInputStyle: {
     borderWidth: 1,
     borderRadius: 20,
-    borderColor: '#FFFFFF',
+    borderColor: colors.white,
     alignSelf: 'center',
     justifyContent: 'center',
     paddingHorizontal: vw(20),
@@ -52,14 +49,11 @@ export const styles = StyleSheet.create({
   textInputAndButtonView: {
       justifyContent: 'center',
        alignItems: 'center'},
-       
        otpInputView:{width: '80%', position: 'absolute', top: vh(30)},
-
-
        otpCodeInput:{
         borderWidth: 0,
         borderBottomWidth: 1,
-        color: 'white',
+        color: colors.white,
       }
 },
 

@@ -61,7 +61,7 @@ export const style = StyleSheet.create({
       
     }, 
     textOptions:{
-      color:'white'
+      color:colors.white
     },
     tooltipContentStyle:{backgroundColor:'transparent', justifyContent:'space-between'}
   

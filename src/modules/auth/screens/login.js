@@ -1,10 +1,6 @@
-import React, { useState} from 'react';
-
-
-
+import React, {useState} from 'react';
 import TextInputComponent from '../../../components/textInput';
 import ButtonComponent from '../../../components/buttonComponent';
-import {useSelector} from 'react-redux';
 import KeyboardAvoidingView from 'react-native/Libraries/Components/Keyboard/KeyboardAvoidingView';
 import ImageComponent from '../../../components/imageComponent';
 import images from '../../../utils/locale/images';
@@ -23,13 +19,9 @@ import {
   snackbarFunction,
 } from '../../../utils/commonFunctions';
 
-
-
 export default function Login({navigation}) {
-  const {uidString} = useSelector(store => store.persistedReducer);
   const [phone, setPhone] = useState(null);
   const [activityIndicator, setActivityIndicator] = useState(false);
-
 
   const successCallback = confirmation => {
     setActivityIndicator(false);
@@ -51,7 +43,6 @@ export default function Login({navigation}) {
   };
 
   return (
-
     <ViewComponent
       style={styles.mainView}
       child={
@@ -65,7 +56,6 @@ export default function Login({navigation}) {
               />
             }
           />
-
 
           <ViewComponent
             style={styles.textInputAndButtonView}
@@ -91,6 +81,5 @@ export default function Login({navigation}) {
         </KeyboardAvoidingView>
       }
     />
-
   );
 }

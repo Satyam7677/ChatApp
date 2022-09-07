@@ -34,7 +34,6 @@ export const styles = StyleSheet.create({
       bottom: vh(50),
     },
     lastMessageText:{color: colors.white,fontSize:vw(10)},
-    // recentChatinfo:{flexDirection: 'row'},
     alluserListView:{height: '90%'},
     nameTimeView:
     {  flexDirection:'row',justifyContent:'space-between'},

@@ -20,7 +20,6 @@ export default function Otp({route, navigation}) {
   const {phone, confirmation} = route.params;
 
   const [activityIndicator, setActivityIndicator] = useState(false);
-  const {uidString} = useSelector(store=>store.persistedReducer)
 
   const dispatch = useDispatch();
 
@@ -40,11 +39,6 @@ export default function Otp({route, navigation}) {
     setActivityIndicator(false);
     snackbarFunction(err);
   };
-
-  const updateUserData= ( phone)=>{
-    fireStoreFunctions.updateUserDetail(uidString,phone)
-  }
-
   
 
   const onPress = async otp => {

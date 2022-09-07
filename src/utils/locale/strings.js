@@ -26,7 +26,28 @@ const strings = {
     enterPhoneNumber:'Enter Phone Number',
     active:'active',
     online:'online',
-    offline:'offline'
+    offline:'offline',
+    getStarted:'Get Started',
+    ios:'ios',
+    name:'Name',
+    userNameVisibleToOthers:'This username is visible to other users',
+    about:'About',
+    phone:'Phone',
+    ok:'Ok',
+    enterName:'Enter name',
+    enterAbout:'Enter About',
+    block:'block',
+    unblockUser:'Unblock user',
+    clearChats:'Clear Chats',
+    copyText:'Copy Text',
+    deleteForMe:'Delete For Me',
+    cancel:'Cancel',
+    deleteForEveryOne:'Delete For Everyone',
+    thisMessageWasDeleted:'This message was deleted',
+    chatRoom:'chatRoom',
+    change:'change',
+    active:'active'
+    
 
 
 }

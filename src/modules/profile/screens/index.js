@@ -1,9 +1,8 @@
-import {Platform, Text, TouchableOpacity} from 'react-native';
+import {Platform, TouchableOpacity} from 'react-native';
 import React, {useLayoutEffect, useState} from 'react';
 import ImageComponent from '../../../components/imageComponent';
 import images from '../../../utils/locale/images';
 import ButtonComponent from '../../../components/buttonComponent';
-import colors from '../../../utils/locale/colors';
 import ViewComponent from '../../../components/viewComponent';
 import TextComponent from '../../../components/textComponent';
 import {useDispatch, useSelector} from 'react-redux';
@@ -15,8 +14,8 @@ import {
 } from '../../../utils/commonFunctions';
 import {userDataReducer} from '../../../reducer/rootReducer';
 import {useNavigation} from '@react-navigation/native';
-import {screenNames} from '../../../utils/locale/strings';
-import { styles } from './styles';
+import { strings} from '../../../utils/locale/strings';
+import {styles} from './styles';
 
 export default function Profile() {
   const [img, setImg] = useState(null);
@@ -44,7 +43,7 @@ export default function Profile() {
   };
 
   const imagePickerSuccessCallback = (imageURL, imagePath) => {
-    Platform.OS == 'ios' ? setImg(imageURL) : setImg(imagePath);
+    Platform.OS == strings.ios ? setImg(imageURL) : setImg(imagePath);
   };
 
   const setTextCallback = str => {
@@ -52,17 +51,14 @@ export default function Profile() {
   };
 
   const commonToolTipOk = () => {
-    toolTipFor == 'Name'
+    toolTipFor == strings.name
       ? fireStoreFunctions.setUserName(uidString, text)
       : fireStoreFunctions.setAbout(uidString, text);
     setToolTipVisible(false);
   };
 
   const okButtonPress = () => {
-    navigation.reset({
-      index: 0,
-      routes: [{name: screenNames.home}],
-    });
+    navigation.popToTop();
   };
 
   const tooltip = () => {
@@ -71,21 +67,22 @@ export default function Profile() {
         isVisible={toolTipVisible}
         content={
           <ViewComponent
+          style={styles.tooltipView}
             child={
               <React.Fragment>
                 <TextInputComponent
-                  styles={{color:'white'}}
+                  styles={styles.userInput}
                   callbackFunc={setTextCallback}
                   value={text}
-                  placeholder={toolTipFor==='Name'?'Enter name': 'Enter About'}
+                  placeholder={
+                    toolTipFor === strings.name
+                      ? strings.enterName
+                      : strings.enterAbout
+                  }
                 />
-                <ButtonComponent
-                  label={'Ok'}
-                  style={styles.profileTextInputButton}
-                  _onPress={() => {
-                    commonToolTipOk();
-                  }}
-                />
+                 <TouchableOpacity style={styles.tooltipOk} onPress={commonToolTipOk}>
+            <TextComponent text={strings.ok} style={styles.userInput}/>
+          </TouchableOpacity>
               </React.Fragment>
             }
           />
@@ -119,7 +116,7 @@ export default function Profile() {
           <TouchableOpacity
             style={styles.userView}
             onPress={() => {
-              setToolTipFor('Name');
+              setToolTipFor(strings.name);
               setToolTipVisible(true);
             }}>
             <ImageComponent
@@ -130,13 +127,13 @@ export default function Profile() {
               style={styles.nameView}
               child={
                 <React.Fragment>
-                  <TextComponent text={'Name'} style={styles.nameText} />
+                  <TextComponent text={strings.name} style={styles.nameText} />
                   <TextComponent
                     text={userData?.name}
                     style={styles.userInput}
                   />
                   <TextComponent
-                    text={'This username is visible to other users'}
+                    text={strings.userNameVisibleToOthers}
                     style={styles.nameText}
                   />
                 </React.Fragment>
@@ -146,7 +143,7 @@ export default function Profile() {
           <TouchableOpacity
             style={styles.userView}
             onPress={() => {
-              setToolTipFor('About');
+              setToolTipFor(strings.about);
               setToolTipVisible(true);
             }}>
             <ImageComponent
@@ -157,7 +154,7 @@ export default function Profile() {
               style={styles.aboutView}
               child={
                 <React.Fragment>
-                  <TextComponent text={'About'} style={styles.nameText} />
+                  <TextComponent text={strings.about} style={styles.nameText} />
                   <TextComponent
                     text={userData?.about}
                     style={styles.userInput}
@@ -176,17 +173,22 @@ export default function Profile() {
               style={styles.phoneView}
               child={
                 <React.Fragment>
-                  <TextComponent text={'Phone'} style={styles.nameText} />
+                  <TextComponent text={strings.phone} style={styles.nameText} />
                   <TextComponent
                     text={`+91${userData?.phone}`}
-                    style={{color: colors.white, textWeight: '100'}}
+                    style={styles.userInput}
                   />
                 </React.Fragment>
               }
             />
           </TouchableOpacity>
 
-          <ButtonComponent style={styles.okButtonPress} label={'Ok'} _onPress={okButtonPress} />
+          <ButtonComponent
+            style={styles.okButtonPress}
+            label={strings.ok}
+            _onPress={okButtonPress}
+          />
+         
           {tooltip(toolTipVisible)}
         </React.Fragment>
       }
@@ -201,4 +203,3 @@ const imagePickerFailureCallback = err => {
 const userDataFailureCallback = () => {
   console.log('Error', err);
 };
-
