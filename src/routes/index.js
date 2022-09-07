@@ -2,15 +2,12 @@ import React from 'react';
 import {
   NavigationContainer,
   DarkTheme,
-  useNavigation,
 } from '@react-navigation/native';
 import AuthStack from './authStack';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import ChatRoom from '../modules/chatRoom/screens';
 import RecentChats from '../modules/chatList/screens/recentChats';
 import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
-import Status from '../modules/status/screens';
-import Calls from '../modules/calls/screens';
 import colors from '../utils/locale/colors';
 import ContactList from '../modules/chatList/screens/contactList';
 import {screenNames, strings} from '../utils/locale/strings';
@@ -18,6 +15,8 @@ import HomeHeader from './routeHeaders/homeHeader';
 import Profile from '../modules/profile/screens';
 import SafeAreaComponent from '../components/safeAreaComponent';
 import Splash from '../modules/splash';
+import Status from '../modules/status/screens';
+import Calls from '../modules/calls/screens';
 
 
 
