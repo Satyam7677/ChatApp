@@ -1,20 +1,20 @@
 import React, {useState} from 'react';
-import {ImageBackground, KeyboardAvoidingView} from 'react-native'
+import { KeyboardAvoidingView} from 'react-native'
 import ActivityIndicatorComponent from '../../../components/activityIndicator';
-import {useDispatch, useSelector} from 'react-redux';
+import {useDispatch} from 'react-redux';
 import {uid} from '../../../reducer/rootReducer';
 import ImageComponent from '../../../components/imageComponent';
 import images from '../../../utils/locale/images';
 import ViewComponent from '../../../components/viewComponent';
 import {keyboardTypeStrings, screenNames} from '../../../utils/locale/strings';
 import {
-  fireStoreFunctions,
   otpVerification,
   snackbarFunction,
 } from '../../../utils/commonFunctions';
 import OTPInputView from '@twotalltotems/react-native-otp-input';
 import {styles} from './styles';
-import auth from '@react-native-firebase/auth';
+import colors from '../../../utils/locale/colors';
+
 
 export default function Otp({route, navigation}) {
   const {phone, confirmation} = route.params;
@@ -75,7 +75,7 @@ export default function Otp({route, navigation}) {
                     autoFocusOnLoad={true}
                     style={styles.otpInputView}
                     codeInputFieldStyle={styles.otpCodeInput}
-                    selectionColor={'white'}
+                    selectionColor={colors.white}
                     keyboardType={keyboardTypeStrings.numPad}
                   />
                 </React.Fragment>

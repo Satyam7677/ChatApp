@@ -2,8 +2,7 @@ import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import Snackbar from 'react-native-snackbar';
 import ImagePicker from 'react-native-image-crop-picker';
-
-
+import { collectionName } from './locale/strings';
 
 const otpVerification=async (otp, confirmation,phone, successCallBack,failureCallback)=>{
   try{const res = await confirmation.confirm(otp)
@@ -330,6 +329,11 @@ const fireStoreFunctions = {
         successCallBack(blockArray)
       }
     )
+  },
+  uploadProfileImage:(uid,image)=>{
+    firestore().collection(collectionName.users).doc(uid).update({
+      img:image
+    })
   }
 };
 

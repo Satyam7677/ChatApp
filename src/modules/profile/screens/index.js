@@ -16,6 +16,8 @@ import {userDataReducer} from '../../../reducer/rootReducer';
 import {useNavigation, useNavigationState} from '@react-navigation/native';
 import { screenNames, strings} from '../../../utils/locale/strings';
 import {styles} from './styles';
+import storage from '@react-native-firebase/storage';
+import FastImageComponent from '../../../components/fastImageComponent';
 
 
 export default function Profile() {
@@ -27,6 +29,8 @@ export default function Profile() {
   const [toolTipFor, setToolTipFor] = useState(null);
   const navigation = useNavigation();
   const routesLength = useNavigationState(state => state.routes.length);
+  const reference = storage().ref(`IMG_${new Date().toTimeString()}.jpg`);
+
 
   useLayoutEffect(() => {
     fireStoreFunctions.getUserData(
@@ -45,7 +49,9 @@ export default function Profile() {
   };
 
   const imagePickerSuccessCallback = (imageURL, imagePath) => {
+    console.log('IMAGEURL, IMAGEPATH', imageURL, imagePath)
     Platform.OS == strings.ios ? setImg(imageURL) : setImg(imagePath);
+    uploadImg(imagePath)
   };
 
   const setTextCallback = str => {
@@ -65,6 +71,20 @@ export default function Profile() {
     navigation.popToTop()
     else
     navigation.replace(screenNames.home)
+  };
+
+  const uploadImg = (imagePath) => {
+    reference
+      .putFile(imagePath)
+      .then(res => {
+        reference.getDownloadURL().then(res => {
+          fireStoreFunctions.uploadProfileImage(uidString,res)
+        });
+      }
+      )
+      .catch(err => {
+        console.log('error upload', err);
+      });
   };
 
   const tooltip = () => {
@@ -111,7 +131,7 @@ export default function Profile() {
             style={styles.profileImageView}
             onPress={cameraPress}
             activeOpacity={0.6}>
-            <ImageComponent uri={{uri: img}} style={styles.profileImageStyle} />
+            <FastImageComponent uri={userData.img} styles={styles.profileImageStyle} />
             <ButtonComponent
               _onPress={cameraPress}
               imgSrc={images.camera}

@@ -1,24 +1,24 @@
-$FirebaseSDKVersion = '9.4.0'
-$RNFirebaseAsStaticFramework = true
+# $FirebaseSDKVersion = '9.4.0'
+# $RNFirebaseAsStaticFramework = true
 require_relative '../node_modules/react-native/scripts/react_native_pods'
 require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
 
 platform :ios, '12.4'
 install! 'cocoapods', :deterministic_uuids => false
 
-permissions_path = '../node_modules/react-native-permissions/ios'
-pod 'Permission-Camera', :path => "#{permissions_path}/Camera"
-pod 'Permission-Contacts', :path => "#{permissions_path}/Contacts"
-pod 'Permission-Microphone', :path => "#{permissions_path}/Microphone"
-pod 'Permission-PhotoLibrary', :path => "#{permissions_path}/PhotoLibrary"
-pod 'Permission-PhotoLibraryAddOnly', :path => "#{permissions_path}/PhotoLibraryAddOnly"
+# permissions_path = '../node_modules/react-native-permissions/ios'
+# pod 'Permission-Camera', :path => "#{permissions_path}/Camera"
+# pod 'Permission-Contacts', :path => "#{permissions_path}/Contacts"
+# pod 'Permission-Microphone', :path => "#{permissions_path}/Microphone"
+# pod 'Permission-PhotoLibrary', :path => "#{permissions_path}/PhotoLibrary"
+# pod 'Permission-PhotoLibraryAddOnly', :path => "#{permissions_path}/PhotoLibraryAddOnly"
 
 production = ENV["PRODUCTION"] == "1"
 
 target 'ChatApp' do
   config = use_native_modules!
-  use_flipper!()
-  # use_frameworks! :linkage => :static
+  # use_flipper!()
+  use_frameworks! :linkage => :static
 
   # pre_install do |installer|
   #   Pod::Installer::Xcode::TargetValidator.send(:define_method, :verify_no_static_framework_transitive_dependencies) {}
@@ -44,22 +44,22 @@ target 'ChatApp' do
     :production => production,
     :hermes_enabled => flags[:hermes_enabled],
     :fabric_enabled => flags[:fabric_enabled],
-    :flipper_configuration => FlipperConfiguration.enabled,
+    # :flipper_configuration => FlipperConfiguration.enabled,
     # An absolute path to your application root.
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-  pod 'Firebase', :modular_headers => true
-  pod 'FirebaseCoreInternal', :modular_headers => true
-  pod 'GoogleUtilities', :modular_headers => true
-  pod 'FirebaseCore', :modular_headers => true
-  pod 'FirebaseMessaging', :modular_headers => true
-  # pod 'FirebaseStorage', :modular_headers => true
-  # pod 'FirebaseStorageInternal', :modular_headers => true
-  pod 'FirebaseAppCheckInterop', :modular_headers => true
-  pod 'FirebaseAuthInterop', :modular_headers => true
-  pod 'FirebaseCore', :modular_headers => true
-  pod 'FirebaseCoreExtension', :modular_headers => true
+  # pod 'Firebase', :modular_headers => true
+  # pod 'FirebaseCoreInternal', :modular_headers => true
+  # pod 'GoogleUtilities', :modular_headers => true
+  # pod 'FirebaseCore', :modular_headers => true
+  # pod 'FirebaseMessaging', :modular_headers => true
+  # # pod 'FirebaseStorage', :modular_headers => true
+  # # pod 'FirebaseStorageInternal', :modular_headers => true
+  # pod 'FirebaseAppCheckInterop', :modular_headers => true
+  # pod 'FirebaseAuthInterop', :modular_headers => true
+  # pod 'FirebaseCore', :modular_headers => true
+  # pod 'FirebaseCoreExtension', :modular_headers => true
 
   target 'ChatAppTests' do
     inherit! :complete

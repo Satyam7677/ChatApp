@@ -8,6 +8,7 @@ import images from '../utils/locale/images';
 import colors from '../utils/locale/colors';
 import {fireStoreFunctions} from '../utils/commonFunctions';
 import {strings} from '../utils/locale/strings';
+import FastImageComponent from './fastImageComponent';
 
 export default function ChatHeader({
   head,
@@ -15,7 +16,9 @@ export default function ChatHeader({
   uid,
   backCallback,
   toolTipCallback,
-  blockIndex
+  blockIndex,
+  typing,
+  img
 }) {
   const [online, setOnline] = useState(null);
   useEffect(() => {
@@ -36,20 +39,32 @@ export default function ChatHeader({
           <TouchableOpacity style={styles.backView} onPress={backCallback}>
             <ImageComponent imgSrc={images.back} style={styles.icon} />
           </TouchableOpacity>
+          <FastImageComponent uri={img} styles={styles.image}/>
           <ViewComponent
             style={styles.nameAndOnlineView}
             child={
               <React.Fragment>
                 <TextComponent style={styles.head} text={`${head} `} />
-               {blockIndex==-1 && <TextComponent
+               {blockIndex==-1 && !typing?<TextComponent
                   style={[
-                    {color: online == 'online' ? 'green' : 'grey'},
+                    {color: online == strings.online ? colors.green : colors.grey},
                     styles.onlineText,
                   ]}
                   text={
                     online
                   }
-                />}
+                />:
+                <TextComponent
+                  style={[
+                    {color: online},
+                    styles.onlineText,
+                  ]}
+                  text={
+                    strings.typing
+                    
+                  }
+                />
+                }
               </React.Fragment>
             }
           />
@@ -108,6 +123,7 @@ const styles = StyleSheet.create({
     marginLeft: vw(20),
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: vw(150),
+    width: vw(120),
   },
+  image:{height:vh(30), width:vw(30), marginRight:vw(10), borderRadius:vw(40)}
 });

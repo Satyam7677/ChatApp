@@ -46,10 +46,13 @@ const strings = {
     thisMessageWasDeleted:'This message was deleted',
     chatRoom:'chatRoom',
     change:'change',
-    active:'active'
-    
+    active:'active',
+    typing:'typing',
+    lastSeenAt:'last seen at'
+}
 
-
+const ellipsizeMode={
+    tail:'tail'
 }
 
 const keyboardTypeStrings={
@@ -58,6 +61,15 @@ const keyboardTypeStrings={
     email:'email-address',
     passwordVisible:'visible-password',
     nameAndPhone:'name-phone-pad'
+}
+
+const collectionName={
+    recentUsers:'RecentUsers',
+    inbox:'Inbox',
+    chatRooms:'ChatRooms',
+    currentStatus:'CurrentStatus',
+    messages:'messages',
+    users:'Users'
 
 }
-export {strings, screenNames, keyboardTypeStrings}
+export {strings, screenNames, keyboardTypeStrings,ellipsizeMode,collectionName}

@@ -3,15 +3,16 @@ import React, {useEffect, useLayoutEffect} from 'react';
 import { userListReducer} from '../../../reducer/rootReducer';
 import {useDispatch, useSelector} from 'react-redux';
 import colors from '../../../utils/locale/colors';
-import ImageComponent from '../../../components/imageComponent';
+
 import TextComponent from '../../../components/textComponent';
 import SafeAreaComponent from '../../../components/safeAreaComponent';
 import ViewComponent from '../../../components/viewComponent';
 import {fireStoreFunctions} from '../../../utils/commonFunctions';
 import {styles} from './styles';
 import { strings } from '../../../utils/locale/strings';
+import FastImageComponent from '../../../components/fastImageComponent';
 
-export default function ContactList({navigation}) {
+const ContactList=({navigation})=> {
   const {userList} = useSelector(store => store.persistedReducer);
   const dispatch = useDispatch();
   const {uidString} = useSelector(store => store.persistedReducer);
@@ -25,16 +26,16 @@ export default function ContactList({navigation}) {
     dispatch(userListReducer(data));
   };
 
-  useLayoutEffect(() => {
-    fireStoreFunctions.getAllUsers(
-      getAllUserSuccessCallback,
-      getAllUserFailureCallback,
-    );
-  }, [uidString]);
+  // useLayoutEffect(() => {
+  //   fireStoreFunctions.getAllUsers(
+  //     getAllUserSuccessCallback,
+  //     getAllUserFailureCallback,
+  //   );
+  // }, [uidString]);
 
-  const getAllUserSuccessCallback = data => {
-    dispatch(userListReducer(data));
-  };
+  // const getAllUserSuccessCallback = data => {
+  //   dispatch(userListReducer(data));
+  // };
 
 
   const _renderItem = ({item}) => {
@@ -49,9 +50,14 @@ export default function ContactList({navigation}) {
                 otherUserId,
                 item.data().phone,
                 item?.data()?.name,
+                item?.data()?.img,
               );
             }}>
-            <ImageComponent style={styles.imageStyle} />
+
+            <FastImageComponent
+            uri={item?.data()?.img}
+            styles={styles.imageStyle}
+            />
             <ViewComponent
               child={
                 <React.Fragment>
@@ -76,9 +82,9 @@ export default function ContactList({navigation}) {
     );
   };
 
-  const _userItemPress = (userId, phoneNum, name) => {
+  const _userItemPress = (userId, phoneNum, name,img) => {
     const roomId = userId < uidString ? userId + uidString : uidString + userId;
-    navigation.replace(strings.chatRoom, {roomId, userId, phoneNum, name});
+    navigation.replace(strings.chatRoom, {roomId, userId, phoneNum, name, img});
   };
 
   return (
@@ -105,3 +111,5 @@ export default function ContactList({navigation}) {
 const getAllUserFailureCallback = err => {
   console.log('Error in getAllUser ', err);
 };
+
+export default React.memo(ContactList)

@@ -8,14 +8,11 @@ import {screenNames, strings} from '../../utils/locale/strings';
 import colors from '../../utils/locale/colors';
 import ViewComponent from '../../components/viewComponent';
 import TextComponent from '../../components/textComponent';
-import auth from '@react-native-firebase/auth';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import { uid } from '../../reducer/rootReducer';
 import { signOut } from '../../utils/commonFunctions';
 import ActivityIndicatorComponent from '../../components/activityIndicator';
-
-
 
 const HomeHeader = () => {
   const navigation = useNavigation()
@@ -25,8 +22,6 @@ const HomeHeader = () => {
   const optionPress = () => {
     setOptionsVisible(true);
   };
-
- 
 
 
   const signOutPress = () => {
@@ -82,9 +77,6 @@ const HomeHeader = () => {
               <TouchableOpacity onPress={signOut}>
                 <TextComponent style={styles.textStyle} text={strings.settings} />
               </TouchableOpacity>
-
-             
-              
             </React.Fragment>
 
               }/>

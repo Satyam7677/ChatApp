@@ -11,10 +11,10 @@ import Tooltip from 'react-native-walkthrough-tooltip';
 import TextComponent from '../../../components/textComponent';
 import ViewComponent from '../../../components/viewComponent';
 import {blockReducer, senderBlockReducer} from '../../../reducer/rootReducer';
-import { strings } from '../../../utils/locale/strings';
+import { collectionName, strings } from '../../../utils/locale/strings';
 
 export default function ChatRoom({route, navigation}) {
-  const {roomId, userId, phoneNum, name} = route.params;
+  const {roomId, userId, phoneNum, name, img} = route.params;
   const [text, setText] = useState(null);
   const {uidString, userData} = useSelector(store => store.persistedReducer);
   const [messageArray, setMessageArray] = useState([]);
@@ -52,7 +52,7 @@ export default function ChatRoom({route, navigation}) {
       typingListener;
       setMessageArray(null);
     };
-  }, []);
+  }, [uidString]);
 
   const checkSameUserBlockSuccessCallback = data => {
     dispatch(senderBlockReducer(data));
@@ -106,9 +106,9 @@ export default function ChatRoom({route, navigation}) {
       );
 
       fireStoreFunctions.addMessage(
-        'ChatRooms',
+        collectionName.chatRooms,
         roomId,
-        'messages',
+        collectionName.messages,
         msg._id,
         msg,
       );
@@ -123,9 +123,9 @@ export default function ChatRoom({route, navigation}) {
       };
 
       fireStoreFunctions.updateRecentChats(
-        'Inbox',
+        collectionName.inbox,
         uidString,
-        'RecentUsers',
+        collectionName.recentUsers,
         userId,
         userContent,
       );
@@ -140,9 +140,9 @@ export default function ChatRoom({route, navigation}) {
       };
 
       fireStoreFunctions.updateRecentChats(
-        'Inbox',
+        collectionName.inbox,
         userId,
-        'RecentUsers',
+        collectionName.recentUsers,
         uidString,
         recieverContent,
       );
@@ -166,9 +166,9 @@ export default function ChatRoom({route, navigation}) {
         GiftedChat.append(previousMessage, msg),
       );
       fireStoreFunctions.addMessage(
-        'ChatRooms',
+        collectionName.chatRooms,
         roomId,
-        'messages',
+        collectionName.messages,
         msg._id,
         msg,
       );
@@ -183,9 +183,9 @@ export default function ChatRoom({route, navigation}) {
       };
 
       fireStoreFunctions.updateRecentChats(
-        'Inbox',
+        collectionName.inbox,
         uidString,
-        'RecentUsers',
+        collectionName.recentUsers,
         userId,
         userContent,
       );
@@ -209,7 +209,7 @@ export default function ChatRoom({route, navigation}) {
             backgroundColor: colors.purple,
           },
         }}
-        tickStyle={{color: 'white'}}
+        tickStyle={style.tickStyle}
       />
     );
   };
@@ -230,9 +230,9 @@ export default function ChatRoom({route, navigation}) {
         roomId,
       };
       fireStoreFunctions.updateRecentChats(
-        'Inbox',
+        collectionName.inbox,
         uidString,
-        'RecentUsers',
+        collectionName.recentUsers,
         userId,
         userContent,
       );
@@ -249,9 +249,9 @@ export default function ChatRoom({route, navigation}) {
         roomId,
       };
       fireStoreFunctions.updateRecentChats(
-        'Inbox',
+        collectionName.inbox,
         uidString,
-        'RecentUsers',
+        collectionName.recentUsers,
         userId,
         userContent,
       );
@@ -279,16 +279,16 @@ export default function ChatRoom({route, navigation}) {
         roomId,
       };
       fireStoreFunctions.updateRecentChats(
-        'Inbox',
+        collectionName.inbox,
         uidString,
-        'RecentUsers',
+        collectionName.recentUsers,
         userId,
         userContent,
       );
       fireStoreFunctions.updateRecentChats(
-        'Inbox',
+        collectionName.inbox,
         userId,
-        'RecentUsers',
+        collectionName.recentUsers,
         uidString,
         recieverContent,
       );
@@ -314,15 +314,15 @@ export default function ChatRoom({route, navigation}) {
         roomId,
       };
       fireStoreFunctions.updateRecentChats(
-        'Inbox',
+        collectionName.inbox,
         uidString,
-        'RecentUsers',
+        collectionName.recentUsers,
         userContent,
       );
       fireStoreFunctions.updateRecentChats(
-        'Inbox',
+        collectionName.inbox,
         userId,
-        'RecentUsers',
+        collectionName.recentUsers,
         recieverContent,
       );
     }
@@ -387,20 +387,21 @@ export default function ChatRoom({route, navigation}) {
       setText(text);
       fireStoreFunctions.typingFunction(
         true,
-        'ChatRooms',
+        collectionName.chatRooms,
         roomId,
         uidString,
-        'CurrentStatus',
+        collectionName.currentStatus
+       ,
         (notBlocked = blockIndex == -1 && senderBlockIndex == -1),
       );
       clearTimeout(timer);
       const newTimer = setTimeout(() => {
         fireStoreFunctions.typingFunction(
           false,
-          'ChatRooms',
+          collectionName.chatRooms,
           roomId,
           uidString,
-          'CurrentStatus',
+          collectionName.currentStatus,
           (notBlocked = blockIndex == -1 && senderBlockIndex == -1),
         );
       }, 1500);
@@ -428,9 +429,9 @@ export default function ChatRoom({route, navigation}) {
       roomId,
     };
     fireStoreFunctions.updateRecentChats(
-      'Inbox',
+      collectionName.inbox,
       uidString,
-      'RecentUsers',
+      collectionName.recentUsers,
       userId,
       userContent,
     );
@@ -460,9 +461,10 @@ export default function ChatRoom({route, navigation}) {
             backCallback={onBackPress}
             toolTipCallback={toolTipCallback}
             blockIndex={blockIndex}
+            typing={typing}
+            img={img}
           />
           <GiftedChat
-            isTyping={typing}
             renderBubble={_renderBubble}
             messagesContainerStyle={style.messageStyle}
             renderAvatar={null}

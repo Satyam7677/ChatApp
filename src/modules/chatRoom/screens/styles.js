@@ -4,7 +4,6 @@ import colors from "../../../utils/locale/colors";
 
 const { width} = Dimensions.get('screen')
 
-
 export const style = StyleSheet.create({
     textInputView: {
       flexDirection: 'row',
@@ -63,7 +62,8 @@ export const style = StyleSheet.create({
     textOptions:{
       color:colors.white
     },
-    tooltipContentStyle:{backgroundColor:'transparent', justifyContent:'space-between'}
+    tooltipContentStyle:{backgroundColor:'transparent', justifyContent:'space-between'},
+    tickStyle:{color: 'white'}
   
   });
   

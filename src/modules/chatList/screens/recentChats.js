@@ -3,14 +3,14 @@ import React, {useEffect, useState, useRef, useMemo} from 'react';
 import ButtonComponent from '../../../components/buttonComponent';
 import {recentUserReducer} from '../../../reducer/rootReducer';
 import {useDispatch, useSelector} from 'react-redux';
-import ImageComponent from '../../../components/imageComponent';
 import images from '../../../utils/locale/images';
 import TextComponent from '../../../components/textComponent';
 import SafeAreaComponent from '../../../components/safeAreaComponent';
 import ViewComponent from '../../../components/viewComponent';
 import {fireStoreFunctions} from '../../../utils/commonFunctions';
 import {styles} from './styles';
-import { screenNames, strings } from '../../../utils/locale/strings';
+import { collectionName, ellipsizeMode, screenNames, strings } from '../../../utils/locale/strings';
+import FastImageComponent from '../../../components/fastImageComponent';
 
 
 export default function RecentChats({navigation}) {
@@ -23,7 +23,7 @@ export default function RecentChats({navigation}) {
   useEffect(() => {
     const subscriber = fireStoreFunctions.checkRecentInbox(
       uidString,
-      'RecentUsers',
+      collectionName.recentUsers,
       snapShotCallBack,
     );
     return subscriber;
@@ -50,7 +50,7 @@ export default function RecentChats({navigation}) {
     const cState =
       currrentState == strings.active
         ? strings.online
-        : `last seen at ${new Date().getHours()} : ${new Date().getMinutes()}`;
+        : `${strings.lastSeenAt} ${new Date().getHours()} : ${new Date().getMinutes()}`;
     setAppStateVisible(cState);
     fireStoreFunctions.updateOnlineState(uidString, cState);
   };
@@ -60,15 +60,16 @@ export default function RecentChats({navigation}) {
     const name = item?.data()?.name;
     const lastMessage = item?.data()?.lastMessage;
     const phone = item?.data()?.phone;
+    const img = item?.data()?.img;
 
     return (
       <React.Fragment>
         <TouchableOpacity
           style={styles.renderItem}
           onPress={() => {
-            _userItemPress(id, phone, name);
+            _userItemPress(id, phone, name, img);
           }}>
-          <ImageComponent style={styles.imageStyle} />
+          <FastImageComponent styles={styles.imageStyle}/>
 
           <ViewComponent
             style={styles.recentChatinfo}
@@ -85,7 +86,7 @@ export default function RecentChats({navigation}) {
 
                 <TextComponent
                   numberOfLines={1}
-                  ellipsizeMode={'tail'}
+                  ellipsizeMode={ellipsizeMode.tail}
                   style={styles.lastMessageText}
                   text={lastMessage}
                 />
@@ -101,9 +102,9 @@ export default function RecentChats({navigation}) {
     navigation.push(screenNames.contactList);
   };
 
-  const _userItemPress = (userId, phoneNum, name) => {
+  const _userItemPress = (userId, phoneNum, name,img) => {
     const roomId = userId < uidString ? userId + uidString : uidString + userId;
-    navigation.navigate(strings.chatRoom, {roomId, userId, phoneNum, name});
+    navigation.navigate(strings.chatRoom, {roomId, userId, phoneNum, name, img});
   };
 
   const button = useMemo(
